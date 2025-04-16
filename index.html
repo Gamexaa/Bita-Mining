@@ -2,97 +2,258 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ß Network - Mining</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ẞ (Bita) - Mining App</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"/>
   <style>
     body {
       margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #0d0d0d;
-      color: white;
-      text-align: center;
+      font-family: 'Roboto', sans-serif;
+      background: #0e0e0e;
+      color: #fff;
     }
-    .container {
-      padding: 30px;
+    .loader {
+      display: flex;
+      height: 100vh;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
     }
-    .logo {
-      font-size: 36px;
-      font-weight: bold;
-      color: #ffa500;
-      margin-bottom: 10px;
+    .app {
+      display: none;
+      padding: 20px;
     }
-    .user-info {
-      font-size: 16px;
+    .tabs {
+      display: flex;
+      justify-content: space-around;
       margin-bottom: 20px;
     }
-    .token-display {
-      font-size: 24px;
-      margin: 10px 0;
-      color: #00ffcc;
-    }
-    .mine-btn {
-      margin-top: 20px;
-      padding: 12px 30px;
-      background: #ffa500;
+    .tab-btn {
+      padding: 10px;
       border: none;
-      font-size: 16px;
-      border-radius: 10px;
+      background: #1a1a1a;
+      color: white;
+      font-weight: bold;
       cursor: pointer;
-      color: #000;
+      border-radius: 8px;
     }
-    .timer {
+    .tab-btn.active {
+      background: #04c38e;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .button {
+      background: #04c38e;
+      padding: 10px 20px;
+      color: #000;
+      border: none;
+      font-weight: bold;
+      border-radius: 10px;
       margin-top: 10px;
-      font-size: 14px;
-      color: #999;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="logo">ß NETWORK</div>
-    <div class="user-info" id="userInfo">Loading...</div>
-    <div class="token-display">Balance: <span id="balance">0.000000 ß</span></div>
-    <button class="mine-btn" onclick="startMining()">Start Mining</button>
-    <div class="timer" id="timerText">24h remaining</div>
+
+<div class="loader" id="loader">
+  <img src="logo.png" alt="logo" width="100" />
+  <p>Loading App...</p>
+</div>
+
+<div class="app" id="app">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="openTab('home')">Home</button>
+    <button class="tab-btn" onclick="openTab('task')">Task</button>
+    <button class="tab-btn" onclick="openTab('refer')">Refer</button>
   </div>
 
-  <script>
-    let tg = window.Telegram.WebApp;
-    tg.expand();
+  <!-- HOME TAB -->
+  <div class="tab-content active" id="home">
+    <h2>Hello, <span id="userName">User</span></h2>
+    <p>Username: <span id="userUsername">-</span></p>
+    <p>Mined Tokens: <span id="balance">0</span> ß</p>
+    <p>Time Left: <span id="timeLeft">24:00:00</span></p>
+    <button class="button" id="startMining">Start Mining</button>
+  </div>
 
-    const user = tg.initDataUnsafe?.user || {};
-    const username = user?.username || "Anonym";
-    const name = user?.first_name || "User";
+  <!-- TASK TAB -->
+  <div class="tab-content" id="task">
+    <h2>Join our community</h2>
+    <a href="https://t.me/bita_community" target="_blank">
+      <button class="button">Join Telegram Channel</button>
+    </a>
+    <button class="button" id="claimTask" style="display:none;">Claim +0.005 ß/h</button>
+    <p id="taskStatus">Not Claimed</p>
+  </div>
 
-    document.getElementById("userInfo").innerHTML = `
-      <strong>Name:</strong> ${name}<br>
-      <strong>Username:</strong> ${username}
-    `;
+  <!-- REFER TAB -->
+  <div class="tab-content" id="refer">
+    <h2>Invite Friends</h2>
+    <p>Your Referral Link:</p>
+    <input type="text" id="refLink" readonly style="width:100%;" />
+    <p>Referrals: <span id="refCount">0</span></p>
+    <div id="refList"></div>
+  </div>
+</div>
 
-    let balance = 0;
-    let mining = false;
-    let speed = 0.015; // default ß/h
-    let startTime, endTime;
+<!-- Telegram WebApp SDK -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    function startMining() {
-      if (mining) return;
-      mining = true;
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
 
-      startTime = new Date();
-      endTime = new Date(startTime.getTime() + 24 * 60 * 60 * 1000); // 24 hrs
+<script>
+  // FIREBASE INIT — add your real config below
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-      updateMining();
+  const tg = window.Telegram.WebApp;
+  if (!tg.initDataUnsafe?.user) {
+    document.body.innerHTML = '<div style="padding:40px;color:red;text-align:center;">Please open in Telegram Mini App.</div>';
+    throw new Error("Not in Telegram");
+  }
+
+  const user = tg.initDataUnsafe.user;
+  const userId = user.id;
+  const name = user.first_name;
+  const username = user.username || 'Anonym';
+  const speedBase = 0.015;
+  const speedBoost = 0.02;
+  let speed = speedBase;
+  let startTime = 0;
+  let interval;
+  let claimed = false;
+
+  document.getElementById("userName").innerText = name;
+  document.getElementById("userUsername").innerText = username;
+  document.getElementById("refLink").value = `https://t.me/BitaMiningBot?start=${username}`;
+
+  function openTab(tab) {
+    document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+    document.querySelector(`.tab-btn[onclick="openTab('${tab}')"]`).classList.add("active");
+    document.getElementById(tab).classList.add("active");
+  }
+
+  function updateUI(balance, timeLeftSec) {
+    document.getElementById("balance").innerText = balance.toFixed(4);
+    let h = Math.floor(timeLeftSec / 3600);
+    let m = Math.floor((timeLeftSec % 3600) / 60);
+    let s = timeLeftSec % 60;
+    document.getElementById("timeLeft").innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function startMining() {
+    db.ref('users/' + userId).once('value').then(snapshot => {
+      const data = snapshot.val() || {};
+      const now = Date.now();
+      if (!data.startTime || now - data.startTime >= 86400000) {
+        startTime = now;
+        db.ref('users/' + userId).set({
+          name,
+          username,
+          startTime,
+          balance: 0,
+          referrals: data.referrals || [],
+          speedBoost: claimed
+        });
+        runMining();
+      } else {
+        startTime = data.startTime;
+        speed = data.speedBoost ? speedBoost : speedBase;
+        runMining(data.balance || 0);
+      }
+    });
+  }
+
+  function runMining(existingBalance = 0) {
+    clearInterval(interval);
+    document.getElementById("startMining").disabled = true;
+    interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      if (elapsed >= 86400) {
+        clearInterval(interval);
+        return;
+      }
+      const mined = existingBalance + elapsed * (speed / 3600);
+      const timeLeft = 86400 - elapsed;
+      updateUI(mined, timeLeft);
+      db.ref('users/' + userId + '/balance').set(mined);
+    }, 1000);
+  }
+
+  document.getElementById("startMining").addEventListener("click", startMining);
+
+  // Task Claim Logic
+  const claimBtn = document.getElementById("claimTask");
+  document.addEventListener("visibilitychange", () => {
+    if (!claimed && document.visibilityState === "visible") {
+      claimBtn.style.display = "block";
     }
+  });
+  claimBtn.addEventListener("click", () => {
+    claimed = true;
+    speed = speedBoost;
+    document.getElementById("taskStatus").innerText = "✓ Claimed";
+    claimBtn.style.display = "none";
+    db.ref('users/' + userId + '/speedBoost').set(true);
+  });
 
-    function updateMining() {
-      const interval = setInterval(() => {
-        const now = new Date();
-        if (now >= endTime) {
-          clearInterval(interval);
-          document.getElementById("timerText").innerText = "Mining session ended";
-          return;
-        }
+  // Referral logic
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get("start");
+  if (ref && ref !== username) {
+    db.ref('users').orderByChild('username').equalTo(ref).once('value', snapshot => {
+      snapshot.forEach(refUser => {
+        const refId = refUser.key;
+        db.ref('users/' + refId + '/referrals').once('value').then(snap => {
+          const refs = snap.val() || [];
+          if (!refs.includes(userId)) {
+            refs.push(userId);
+            db.ref('users/' + refId).update({
+              referrals: refs,
+              balance: (refUser.val().balance || 0) + 0.2
+            });
+          }
+        });
+      });
+    });
+  }
 
-        const secondsPassed
+  // Load user data
+  window.addEventListener("load", () => {
+    db.ref('users/' + userId).once('value').then(snapshot => {
+      const data = snapshot.val() || {};
+      if (data.startTime) {
+        startTime = data.startTime;
+        speed = data.speedBoost ? speedBoost : speedBase;
+        runMining(data.balance || 0);
+      }
+      if (data.referrals) {
+        document.getElementById("refCount").innerText = data.referrals.length;
+        document.getElementById("refList").innerHTML = data.referrals.map(id =>
+          `<p>- ${id}</p>`
+        ).join("");
+      }
+    });
+    document.getElementById("loader").style.display = "none";
+    document.getElementById("app").style.display = "block";
+  });
+</script>
+</body>
+  </html>
