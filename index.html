@@ -1,53 +1,154 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ß Network Mining</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
       margin: 0;
-      padding: 0;
       font-family: sans-serif;
-      background: #0d0d0d;
-      color: white;
+      background: #000;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: start;
+      height: 100vh;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 400px;
+      margin-top: 30px;
+    }
+
+    .profile {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .profile h2 {
+      margin: 5px 0;
+    }
+
+    .mining-box {
+      background: #111;
+      border-radius: 15px;
+      padding: 20px;
       text-align: center;
     }
-    .container {
-      margin-top: 100px;
+
+    .token-count {
+      font-size: 32px;
+      margin-bottom: 10px;
     }
-    .logo {
-      font-size: 48px;
-      font-weight: bold;
-      color: #ffa500;
-    }
-    .tagline {
-      font-size: 18px;
-      margin-top: 10px;
-      color: #aaa;
-    }
-    .mine-btn {
-      margin-top: 30px;
-      padding: 12px 30px;
-      background: #ffa500;
-      border: none;
+
+    .timer {
       font-size: 16px;
-      border-radius: 10px;
-      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      background-color: #00ff99;
       color: #000;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .btn:disabled {
+      background-color: #555;
+      cursor: default;
+    }
+
+    .footer {
+      margin-top: 30px;
+      font-size: 12px;
+      color: #888;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="logo">ß NETWORK</div>
-    <div class="tagline">Start mining ß tokens now</div>
-    <button class="mine-btn" onclick="mineNow()">Start Mining</button>
+    <div class="profile">
+      <h2 id="userName">Loading...</h2>
+      <p id="userUsername"></p>
+    </div>
+
+    <div class="mining-box">
+      <div class="token-count" id="tokenBalance">0 ß</div>
+      <div class="timer" id="timerText">Mining not started</div>
+      <button class="btn" id="startBtn">Start Mining</button>
+    </div>
+
+    <div class="footer">ß Network Mining</div>
   </div>
 
   <script>
-    function mineNow() {
-      alert("Mining started! ß rate: 0.015/hour");
+    const user = window.Telegram.WebApp.initDataUnsafe.user;
+    const name = user?.first_name || "Unknown";
+    const username = user?.username ? `@${user.username}` : "Anonym";
+
+    document.getElementById("userName").innerText = name;
+    document.getElementById("userUsername").innerText = username;
+
+    const tokenRate = 0.015 / 3600; // ß per second
+    let balance = parseFloat(localStorage.getItem("balance") || "0");
+    let startTime = localStorage.getItem("startTime");
+    let isMining = !!startTime;
+
+    const startBtn = document.getElementById("startBtn");
+    const balanceText = document.getElementById("tokenBalance");
+    const timerText = document.getElementById("timerText");
+
+    function updateMining() {
+      if (!startTime) return;
+      const now = Date.now();
+      const elapsed = (now - parseInt(startTime)) / 1000;
+      const maxSeconds = 24 * 3600;
+
+      if (elapsed >= maxSeconds) {
+        const total = tokenRate * maxSeconds;
+        balance += total;
+        localStorage.setItem("balance", balance.toFixed(6));
+        localStorage.removeItem("startTime");
+        timerText.innerText = "Mining completed (24h)";
+        startBtn.disabled = true;
+        isMining = false;
+        return;
+      }
+
+      const mined = tokenRate * elapsed;
+      const total = balance + mined;
+      balanceText.innerText = `${total.toFixed(6)} ß`;
+
+      const timeLeft = maxSeconds - elapsed;
+      const hrs = Math.floor(timeLeft / 3600);
+      const mins = Math.floor((timeLeft % 3600) / 60);
+      const secs = Math.floor(timeLeft % 60);
+
+      timerText.innerText = `Time left: ${hrs}h ${mins}m ${secs}s`;
     }
+
+    if (isMining) {
+      startBtn.disabled = true;
+      setInterval(updateMining, 1000);
+    } else {
+      balanceText.innerText = `${balance.toFixed(6)} ß`;
+    }
+
+    startBtn.addEventListener("click", () => {
+      startTime = Date.now();
+      localStorage.setItem("startTime", startTime);
+      isMining = true;
+      startBtn.disabled = true;
+      setInterval(updateMining, 1000);
+    });
   </script>
 </body>
 </html>
