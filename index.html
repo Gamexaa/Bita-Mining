@@ -1,76 +1,79 @@
-<!DOCTYPE html><html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bita Mining App</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    body { background: #0f0f0f; color: #ffffff; padding: 1rem; }
-    header { text-align: center; margin-bottom: 2rem; }
-    h1 { font-size: 2rem; color: #00ffcc; }
-    .tabs { display: flex; justify-content: space-around; margin-bottom: 1rem; border-bottom: 1px solid #333; }
-    .tab { padding: 0.5rem; cursor: pointer; flex: 1; text-align: center; background: #1a1a1a; }
-    .tab.active { background: #00ffcc; color: #000; font-weight: bold; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    .box { background: #1a1a1a; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; }
-    .label { font-weight: bold; margin-bottom: 0.25rem; display: block; color: #00ffcc; }
-    .value { font-size: 1.2rem; }
-    .ref-link { word-break: break-word; color: #ccc; }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Bita Mining App</h1>
-  </header>  <div class="tabs">
-    <div class="tab active" onclick="switchTab('home')">Home</div>
-    <div class="tab" onclick="switchTab('boost')">Boost</div>
-    <div class="tab" onclick="switchTab('refer')">Refer</div>
-  </div>  <div id="home" class="tab-content active">
-    <div class="box">
-      <span class="label">Welcome,</span>
-      <span class="value" id="username">@username</span>
-    </div>
-    <div class="box">
-      <span class="label">Balance</span>
-      <span class="value" id="balance">0 ß</span>
-    </div>
-    <div class="box">
-      <span class="label">Mining Speed</span>
-      <span class="value">0.015 ß/hour</span>
-    </div>
-  </div>  <div id="boost" class="tab-content">
-    <div class="box">
-      <span class="label">Join our Telegram Channel:</span>
-      <a href="https://t.me/bita_community" target="_blank" class="value">@bita_community</a>
-    </div>
-    <div class="box">
-      <span class="label">More boost tasks coming soon!</span>
-    </div>
-  </div>  <div id="refer" class="tab-content">
-    <div class="box">
-      <span class="label">Your Referral Link:</span>
-      <div class="ref-link" id="referralLink">https://t.me/BitaMiningBot?start=yourid</div>
-    </div>
-    <div class="box">
-      <span class="label">Referral Bonus:</span>
-      <span class="value">0.2 ß per user</span>
-    </div>
-  </div>  <script>
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-      document.querySelector(`.tab[onclick*="${tabId}"]`).classList.add('active');
-      document.getElementById(tabId).classList.add('active');
-    }
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bita Mining App</title>
+    <meta charset="UTF-8" />
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f9f9f9;
+        color: #333;
+      }
+      .card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Welcome to ß Mining App</h2>
+    <div id="userCard" class="card">Loading user data...</div>
 
-    // Telegram login placeholder
-    window.Telegram.WebApp.ready();
-    const user = Telegram.WebApp.initDataUnsafe.user;
-    if (user) {
-      document.getElementById("username").textContent = `@${user.username || user.first_name}`;
-      document.getElementById("referralLink").textContent = `https://t.me/BitaMiningBot?start=${user.id}`;
-    }
-  </script>  <script src="https://telegram.org/js/telegram-web-app.js"></script></body>
+    <script>
+      // Firebase Config
+      const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "bita-mining.firebaseapp.com",
+        projectId: "bita-mining",
+        storageBucket: "bita-mining.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+
+      // Telegram WebApp Integration
+      const tg = window.Telegram.WebApp;
+      tg.expand(); // Expand to full screen
+
+      const user = tg.initDataUnsafe?.user;
+
+      if (!user) {
+        document.getElementById('userCard').innerText = "Please open this link inside Telegram.";
+      } else {
+        const userId = user.id.toString();
+        const userRef = db.collection("users").doc(userId);
+
+        userRef.get().then((doc) => {
+          if (doc.exists) {
+            showUser(doc.data());
+          } else {
+            const newUser = {
+              username: user.username || "",
+              first_name: user.first_name || "",
+              balance: 0.015,
+              referrals: []
+            };
+            userRef.set(newUser).then(() => showUser(newUser));
+          }
+        });
+
+        function showUser(data) {
+          document.getElementById('userCard').innerHTML = `
+            <strong>Username:</strong> @${data.username}<br>
+            <strong>Name:</strong> ${data.first_name}<br>
+            <strong>Balance:</strong> ${data.balance} ß<br>
+            <strong>Referrals:</strong> ${data.referrals.length}
+          `;
+        }
+      }
+    </script>
+  </body>
 </html>
