@@ -1,65 +1,30 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ẞ Bita Mining App</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
-    body { background: #111; color: #fff; padding: 1rem; }
-    .tabs { display: flex; justify-content: space-around; background: #222; padding: 1rem; border-radius: 12px; }
-    .tab { cursor: pointer; padding: 0.5rem 1rem; background: #333; border-radius: 8px; }
-    .tab.active { background: #4CAF50; }
-    .section { display: none; margin-top: 2rem; }
-    .section.active { display: block; }
-    .card { background: #1c1c1c; padding: 1rem; margin-top: 1rem; border-radius: 12px; text-align: center; }
-    .btn { background: #4CAF50; color: white; padding: 0.5rem 1rem; border: none; border-radius: 8px; cursor: pointer; margin-top: 1rem; }
-    .small { font-size: 0.9rem; color: #aaa; }
-  </style>
+  <title>Bita Mining</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"></script>
 </head>
 <body>
-  <h2>ẞ Bita Mining</h2>
-  <div class="tabs">
-    <div class="tab active" onclick="showTab('home')">Home</div>
-    <div class="tab" onclick="showTab('boost')">Boost</div>
-    <div class="tab" onclick="showTab('refer')">Refer</div>
-  </div>  <div id="home" class="section active">
-    <div class="card">
-      <h3>Welcome, <span id="tg-name">User</span></h3>
-      <p>Balance: <strong id="balance">0.000</strong> β</p>
-      <p>Mining Rate: <strong>0.015 β/h</strong></p>
-      <div class="small">Mining active...</div>
+  <div class="container">
+    <h1>ẞ Mining</h1>
+    <div id="user-info" style="display: none;">
+      <p id="welcome-text"></p>
+      <button onclick="signOut()">Logout</button>
     </div>
-  </div>  <div id="boost" class="section">
-    <div class="card">
-      <h3>Boost Mining</h3>
-      <p>Join our Telegram Channel to earn boost!</p>
-      <a href="https://t.me/bita_community" class="btn">Join Channel</a>
+    <div id="login-section">
+      <button onclick="signInWithGoogle()">Login with Google</button>
     </div>
-  </div>  <div id="refer" class="section">
-    <div class="card">
-      <h3>Refer & Earn</h3>
-      <p>Your Referral Link:</p>
-      <input type="text" id="ref-link" readonly style="width: 100%; margin-top: 0.5rem;" />
-      <p style="margin-top:1rem;">Referrals: <strong id="ref-count">0</strong></p>
-    </div>
-  </div>  <script>
-    function showTab(tab) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.querySelector(`[onclick*="${tab}"]`).classList.add('active');
-      document.getElementById(tab).classList.add('active');
-    }
 
-    // Telegram login simulation (auto-detect from URL)
-    const urlParams = new URLSearchParams(window.location.search);
-    const tgUser = urlParams.get('tg_name') || 'User';
-    const tgUsername = urlParams.get('tg_username') || 'username';
-    const balance = urlParams.get('balance') || '0.000';
-    const refCount = urlParams.get('ref') || '0';
+    <div id="home-page" style="display: none;">
+      <h2>Mining Rate</h2>
+      <p id="mining-rate">0 ß/h</p>
+      <p>Active Referrals: <span id="active-referrals">0</span></p>
+    </div>
+  </div>
 
-    document.getElementById('tg-name').innerText = tgUser;
-    document.getElementById('balance').innerText = balance;
-    document.getElementById('ref-count').innerText = refCount;
-    document.getElementById('ref-link').value = `https://t.me/BitaMiningBot?start=${tgUsername}`;
-  </script></body>
+  <script src="app.js"></script>
+</body>
 </html>
