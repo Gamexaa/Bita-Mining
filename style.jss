@@ -1,26 +1,37 @@
 // style.jss
 
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+// style.jss
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// --- Firebase Configuration ---
+// Replace with your ACTUAL Firebase project configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAhUKkVb9RRYzGckeEHaNCR48rOfNS_rXY",
+  apiKey: "AIzaSyAhUKkVb9RRYzGckeEHaNCR48rOfNS_rXY", // <-- Tumhari Key
   authDomain: "bita-mining-app.firebaseapp.com",
   projectId: "bita-mining-app",
-  storageBucket: "bita-mining-app.firebasestorage.app",
+  storageBucket: "bita-mining-app.firebasestorage.app", // Sahi karna - .appspot.com hoga shayad? Check console.
   messagingSenderId: "383835477324",
   appId: "1:383835477324:web:608d418b8114fb2d87abe9",
-  measurementId: "G-DBRTWRWSEM"
+  // measurementId: "G-DBRTWRWSEM" // Optional
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+// --- Initialize Firebase (Compat Syntax) ---
+let firebaseApp;
+if (!firebase.apps.length) {
+  firebaseApp = firebase.initializeApp(firebaseConfig);
+} else {
+  firebaseApp = firebase.app(); // Get default app if already initialized
+}
+
+// --- Get Firebase Service Instances (Compat Syntax) ---
+const db = firebase.firestore();
+const functions = firebase.functions();
+// const analytics = firebase.analytics(); // Agar Analytics use karna hai (HTML mein script add karna padega)
+
+
+// Baaki ka JavaScript code neeche waise hi rahega...
+document.addEventListener('DOMContentLoaded', () => {
+    // ... Tumhara User Handling, Navigation, Mining Button ka code ...
+});
 
 // Ye ensure karta hai ki HTML poora load ho jaye fir hi JavaScript chale
 document.addEventListener('DOMContentLoaded', () => {
