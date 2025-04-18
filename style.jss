@@ -1,4 +1,26 @@
-// style.js
+// style.jss
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAhUKkVb9RRYzGckeEHaNCR48rOfNS_rXY",
+  authDomain: "bita-mining-app.firebaseapp.com",
+  projectId: "bita-mining-app",
+  storageBucket: "bita-mining-app.firebasestorage.app",
+  messagingSenderId: "383835477324",
+  appId: "1:383835477324:web:608d418b8114fb2d87abe9",
+  measurementId: "G-DBRTWRWSEM"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
 // Ye ensure karta hai ki HTML poora load ho jaye fir hi JavaScript chale
 document.addEventListener('DOMContentLoaded', () => {
