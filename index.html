@@ -1,30 +1,137 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Bita Mining</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="style.css">
-  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"></script>
+    <meta charset="UTF-8">
+    <!-- Ye line mobile ke liye important hai -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ß Bita Mining</title>
+    <!-- Yahan hum apni CSS file ko link kar rahe hain -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Ye Telegram Mini App ke liye zaroori script hai -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>ẞ Mining</h1>
-    <div id="user-info" style="display: none;">
-      <p id="welcome-text"></p>
-      <button onclick="signOut()">Logout</button>
-    </div>
-    <div id="login-section">
-      <button onclick="signInWithGoogle()">Login with Google</button>
-    </div>
 
-    <div id="home-page" style="display: none;">
-      <h2>Mining Rate</h2>
-      <p id="mining-rate">0 ß/h</p>
-      <p>Active Referrals: <span id="active-referrals">0</span></p>
-    </div>
-  </div>
+    <!-- Main container poore app ke liye -->
+    <div class="app-container">
 
-  <script src="app.js"></script>
+        <!-- Screen 1: Home Screen (Default mein yahi dikhega) -->
+        <div id="home-screen" class="screen active">
+            <div class="header">
+                <!-- Yahan profile icon/button aa sakta hai baad mein -->
+                <!-- <button id="profile-button">P</button> -->
+                <h2>ß Bita Network</h2>
+                <!-- Shayad yahan user ka naam dikha sakte hain Telegram se lekar -->
+                <p id="user-greeting">Welcome!</p>
+            </div>
+
+            <div class="balance-section">
+                <div class="bita-balance-display">
+                    <span class="currency-symbol">ß</span>
+                    <span id="bita-balance">0.0000</span> <!-- JavaScript isse update karega -->
+                </div>
+                <div class="usd-value-display">
+                    (<span id="usd-value">$0.00</span>) <!-- JavaScript isse calculate karega -->
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <p>Active Referrals</p>
+                    <strong id="active-referrals">0</strong> <!-- JS Update -->
+                </div>
+                <div class="stat-box">
+                    <p>Total Referrals</p>
+                    <strong id="total-referrals">0</strong> <!-- JS Update -->
+                </div>
+                <div class="stat-box">
+                    <p>Mining Time Left</p>
+                    <strong id="mining-timer">00:00:00</strong> <!-- JS Update -->
+                </div>
+                <div class="stat-box">
+                    <p>Total Mining Speed</p>
+                    <strong><span id="mining-speed">0.015</span>/h</strong> <!-- JS Update -->
+                </div>
+            </div>
+
+            <div class="mining-action">
+                <button id="mining-button" class="mining-btn">Start Mining</button> <!-- JS iska text badlega -->
+                <p class="mining-info">Start mining every 24 hours!</p>
+            </div>
+        </div>
+
+        <!-- Screen 2: Friends Screen (Default mein chhupa rahega) -->
+        <div id="friends-screen" class="screen">
+            <h2>Invite Friends</h2>
+            <p>Boost your Mining speed by +0.005/h per active miner.</p>
+            <div class="invite-section">
+                 <p>Your Invite Code: <strong id="referral-code">Loading...</strong></p> <!-- JS Update -->
+                 <button id="copy-invite-button">Copy Invite Link/Code</button>
+            </div>
+
+            <h3>Your Team</h3>
+            <p>Total Referrals: <span id="friends-count">0</span> users</p> <!-- JS Update -->
+            <ul id="friends-list" class="list-container">
+                <!-- Friend list items JavaScript se yahan add honge -->
+                <li class="placeholder">No friends referred yet.</li>
+                <!-- Example structure (JS generate karega):
+                <li>
+                    <span>FriendUsername (Joined: Jan 12)</span>
+                    <span class="status active">+0.005/h Active</span>
+                </li>
+                <li>
+                    <span>AnotherUser (Joined: Jan 11)</span>
+                    <span class="status inactive">Not active!</span>
+                </li>
+                 -->
+            </ul>
+        </div>
+
+        <!-- Screen 3: Boost Screen (Default mein chhupa rahega) -->
+        <div id="boost-screen" class="screen">
+            <h2>Complete Tasks to Boost Your Mining Speed</h2>
+            <ul id="boost-tasks-list" class="list-container">
+                <!-- Boost task items JavaScript se yahan add honge -->
+                 <li class="placeholder">No boost tasks available right now.</li>
+                <!-- Example structure (JS generate karega):
+                <li class="task-item">
+                    <div>
+                        <span class="task-icon">🚀</span>
+                        <span class="task-description">Join our Telegram Channel</span>
+                        <span class="task-boost">+0.005/h</span>
+                    </div>
+                    <button class="task-action-button" data-task-id="channel_join">Start</button>
+                </li>
+                <li class="task-item completed">
+                    <div>
+                         <span class="task-icon">✔️</span>
+                         <span class="task-description">Follow us on X</span>
+                         <span class="task-boost">+0.010/h</span>
+                     </div>
+                     <span>Completed</span>
+                 </li>
+                 -->
+            </ul>
+        </div>
+
+        <!-- Neeche ka Navigation Bar -->
+        <nav id="bottom-nav">
+            <button class="nav-button active" data-target="home-screen">
+                <span class="nav-icon">🏠</span> Home
+            </button>
+            <button class="nav-button" data-target="friends-screen">
+                <span class="nav-icon">👥</span> Friends
+            </button>
+            <button class="nav-button" data-target="boost-screen">
+                <span class="nav-icon">⚡</span> Boost
+            </button>
+        </nav>
+
+    </div> <!-- End .app-container -->
+
+    <!-- Hum apni JavaScript file ko last mein link karenge -->
+    <!-- <script src="script.js"></script> -->
+    <!-- Abhi ke liye JS file link commented out hai -->
+
 </body>
-</html>
+  </html>
