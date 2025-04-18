@@ -1,31 +1,365 @@
+/* style.css */
+
+/* --- Basic Reset & Defaults --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    /* A clean sans-serif font */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
 body {
-  font-family: Arial, sans-serif;
-  text-align: center;
-  background: #000;
+    background-color: #121212; /* Dark background */
+    color: #ffffff; /* White text */
+    /* Prevents scrolling the whole page, useful for single-page app feel */
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center; /* Centers app container horizontally */
+    align-items: stretch; /* Stretches app container vertically */
 }
 
-.container {
-  margin-top: 50px;
-  background: #fb8c00;
-  padding: 20px;
-  border-radius: 120px;
-  width: 90%;
-  height: 90%;
-  max-width: 400px;
-  height: 400px;
-  margin-left: auto;
-  margin-right: auto;
+/* --- App Container --- */
+.app-container {
+    width: 100%;
+    max-width: 600px; /* Max width for larger screens, looks like a phone */
+    height: 100%;
+    display: flex;
+    flex-direction: column; /* Stack header, content, nav vertically */
+    background-color: #1a1a1a; /* Slightly lighter dark for the container */
+    position: relative; /* Needed for absolute positioning of nav */
+    overflow: hidden; /* Hide anything that overflows */
 }
 
-button {
-  background: #000;
-  margin-top: 100px;
-  color: white;
-  padding: 10px 20px;
-  border: grey;
-  border-radius: 8px;
-  cursor: pointer;
-  height: 60px;
-  width: 300px;
+/* --- Screen Management --- */
+.screen {
+    flex-grow: 1; /* Takes up available space between header (if any) and nav */
+    padding: 20px 15px 80px 15px; /* Padding inside screen, more at bottom for nav overlap */
+    display: none; /* Hide all screens by default */
+    overflow-y: auto; /* Allow scrolling within the screen if content overflows */
+    flex-direction: column; /* Arrange content vertically */
+    align-items: center; /* Center content horizontally */
 }
 
+.screen.active {
+    display: flex; /* Show the active screen using flex */
+}
+
+/* --- Header (Example, if needed later) --- */
+.header {
+    width: 100%;
+    text-align: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #333;
+    margin-bottom: 20px;
+}
+
+.header h2 {
+    color: #FDB813; /* Accent color */
+    font-size: 1.5em;
+    margin-bottom: 5px;
+}
+
+#user-greeting {
+    color: #cccccc;
+    font-size: 0.9em;
+}
+
+/* --- Balance Section (Home Screen) --- */
+.balance-section {
+    background-color: #FDB813; /* Accent background */
+    color: #000000; /* Black text on accent background */
+    border-radius: 50%; /* Make it circular */
+    width: 200px; /* Adjust size as needed */
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto; /* Center horizontally */
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(253, 184, 19, 0.4); /* Glow effect */
+}
+
+.bita-balance-display {
+    font-size: 2.5em; /* Large balance */
+    font-weight: bold;
+    line-height: 1.1;
+}
+
+.bita-balance-display .currency-symbol {
+    font-weight: normal;
+    margin-right: 5px;
+}
+
+.usd-value-display {
+    font-size: 1em;
+    margin-top: 5px;
+    opacity: 0.8;
+}
+
+/* --- Stats Grid (Home Screen) --- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns */
+    gap: 15px; /* Space between boxes */
+    width: 100%;
+    margin-top: 25px;
+    margin-bottom: 25px;
+}
+
+.stat-box {
+    background-color: #2a2a2a; /* Darker box background */
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-box p {
+    font-size: 0.8em;
+    color: #aaaaaa; /* Lighter text for label */
+    margin-bottom: 5px;
+}
+
+.stat-box strong {
+    font-size: 1.2em;
+    color: #ffffff;
+}
+
+/* --- Mining Action (Home Screen) --- */
+.mining-action {
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.mining-btn {
+    background-color: #FDB813; /* Accent color */
+    color: #000000; /* Black text */
+    border: none;
+    border-radius: 25px; /* Rounded button */
+    padding: 15px 40px;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    width: 80%;
+    max-width: 300px;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.mining-btn:hover {
+    background-color: #e0a800; /* Slightly darker on hover */
+}
+
+.mining-btn.mining-active { /* Style when mining is active */
+    background-color: #555555; /* Greyed out */
+    color: #cccccc;
+    cursor: default;
+}
+
+.mining-info {
+    font-size: 0.8em;
+    color: #aaaaaa;
+    margin-top: 10px;
+}
+
+/* --- Bottom Navigation Bar --- */
+#bottom-nav {
+    position: absolute; /* Stick to bottom */
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-width: 600px; /* Match app container max-width */
+    display: flex;
+    justify-content: space-around; /* Distribute buttons evenly */
+    background-color: #000000; /* Black background for nav */
+    padding: 10px 0;
+    border-top: 1px solid #333;
+}
+
+.nav-button {
+    background: none;
+    border: none;
+    color: #aaaaaa; /* Inactive color */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.8em;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.nav-button .nav-icon {
+    font-size: 1.4em; /* Icon size */
+    margin-bottom: 3px;
+}
+
+.nav-button.active {
+    color: #FDB813; /* Active color */
+}
+
+/* --- Friends Screen Specific Styles --- */
+#friends-screen h2, #boost-screen h2 {
+    width: 100%;
+    text-align: center;
+    color: #FDB813;
+    margin-bottom: 15px;
+}
+
+#friends-screen p {
+    text-align: center;
+    color: #cccccc;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+.invite-section {
+    background-color: #2a2a2a;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    width: 100%;
+    text-align: center;
+}
+
+.invite-section p {
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+#copy-invite-button {
+    background-color: #4a90e2; /* Blue button */
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#copy-invite-button:hover {
+    background-color: #3a7bc8;
+}
+
+#friends-screen h3 {
+    width: 100%;
+    text-align: left;
+    color: #ffffff;
+    margin-bottom: 10px;
+    margin-top: 10px;
+    font-size: 1.1em;
+}
+
+/* --- General List Styles (Friends & Boost) --- */
+.list-container {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+}
+
+.list-container li {
+    background-color: #2a2a2a;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.list-container li.placeholder {
+    color: #777777;
+    justify-content: center;
+    font-style: italic;
+}
+
+/* Friend List Item Specifics */
+#friends-list li span:first-child { /* Username and join date */
+    color: #ffffff;
+    font-size: 0.9em;
+}
+
+#friends-list li .status {
+    font-size: 0.8em;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 10px;
+}
+
+#friends-list li .status.active {
+    color: #121212;
+    background-color: #4CAF50; /* Green for active */
+}
+
+#friends-list li .status.inactive {
+    color: #dddddd;
+    background-color: #777777; /* Grey for inactive */
+}
+
+/* --- Boost Screen Specific Styles --- */
+.task-item {
+    /* Already styled by general .list-container li */
+    flex-wrap: wrap; /* Allow button to wrap if needed */
+}
+
+.task-item > div { /* Container for icon, description, boost */
+    display: flex;
+    align-items: center;
+    flex-grow: 1; /* Take available space */
+    margin-right: 10px; /* Space before button */
+}
+
+.task-icon {
+    font-size: 1.2em;
+    margin-right: 10px;
+}
+
+.task-description {
+    color: #ffffff;
+    font-size: 0.9em;
+    margin-right: 10px;
+}
+
+.task-boost {
+    font-size: 0.8em;
+    color: #FDB813; /* Accent color for boost amount */
+    font-weight: bold;
+    white-space: nowrap; /* Prevent wrapping */
+}
+
+.task-action-button {
+    background-color: #4a90e2; /* Blue button */
+    color: #ffffff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    white-space: nowrap;
+}
+
+.task-action-button:hover {
+    background-color: #3a7bc8;
+}
+
+.task-item.completed > div { /* Style for completed task text */
+    opacity: 0.6;
+}
+
+.task-item.completed > span { /* Style for "Completed" text */
+     color: #4CAF50; /* Green */
+     font-size: 0.9em;
+     font-weight: bold;
+}
+
+.task-item.completed button { /* Hide button for completed tasks */
+   /* display: none; You might want to show a "Claimed" button instead */
+   background-color: #555;
+   cursor: default;
+   color: #aaa;
+  }
