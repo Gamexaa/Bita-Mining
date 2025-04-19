@@ -2,55 +2,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bita Mining</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Link Font Awesome (Optional, agar icons use karne hain) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Firebase SDKs (Replace with your actual Firebase project config) -->
-    <!-- Get these from your Firebase project settings > SDK setup & configuration -->
+    <!-- Firebase SDKs (IMPORTANT: Replace with your actual SDK URLs/Config) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <!-- <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script> -->
     <!-- <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script> -->
-
 </head>
 <body>
-    <div id="app-container">
-        <!-- Screens Container -->
-        <main id="screens-container">
+    <div class="app-container">
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+
             <!-- Home Screen -->
             <div id="home-screen" class="screen active">
-                <div class="balance-section">
-                    <div class="balance-label">Your Balance (Bita)</div>
-                    <div id="balance" class="balance-amount">0.0000</div>
-                    <div id="usd-equivalent" class="usd-value">( $0.00 )</div>
+                <div class="top-section-home">
+                    <div class="balance-circle">
+                        <div class="balance-logo">$ß</div>
+                        <div id="balance" class="balance-value">0000.0000</div>
+                        <div id="usd-equivalent" class="usd-value">( $000.00 )</div>
+                    </div>
                 </div>
 
-                <div class="mining-info">
+                <div class="info-grid">
                     <div class="info-box">
-                        <span class="info-label">Mining Timer</span>
-                        <span id="mining-timer" class="info-value">00:00:00</span>
+                        <div class="info-label"><i class="fa-solid fa-users"></i> Active referral</div>
+                        <div id="active-referrals" class="info-value">0</div>
                     </div>
                     <div class="info-box">
-                        <span class="info-label">Mining Speed</span>
-                        <span id="mining-speed" class="info-value">0.015/h</span>
+                        <div class="info-label"><i class="fa-solid fa-users"></i> Total referral</div>
+                        <div id="total-referrals" class="info-value">0</div>
                     </div>
-                     <div class="info-box">
-                        <span class="info-label">Active Refs</span>
-                        <span id="active-referrals" class="info-value">0</span>
+                    <div class="info-box">
+                        <div class="info-label"><i class="fa-regular fa-clock"></i> Mining time left</div>
+                        <div id="mining-timer" class="info-value">00:00:00</div>
                     </div>
-                     <div class="info-box">
-                        <span class="info-label">Total Refs</span>
-                        <span id="total-referrals" class="info-value">0</span>
+                    <div class="info-box">
+                        <div class="info-label"><i class="fa-solid fa-bolt"></i> Total mining speed</div>
+                        <div id="mining-speed" class="info-value">0.015/h</div>
                     </div>
                 </div>
 
                 <div class="mining-action">
-                     <p class="mining-instruction">Start mining every 24 hours for max ß potential!</p>
-                     <button id="mining-button" class="primary-button">Start Mining</button>
+                    <p class="mining-instruction">Start mining every 24 hours for max ß potential !</p>
+                    <button id="mining-button" class="mining-button-style">Start Mining</button>
                 </div>
                  <!-- Error Message Area -->
                  <div id="error-message-area" class="error-message" style="display: none;"></div>
@@ -58,55 +59,78 @@
 
             <!-- Friends Screen -->
             <div id="friends-screen" class="screen">
-                <h2>Friends</h2>
-                <div class="friends-summary">
+                <h2 class="screen-title">INVITE FRIENDS</h2>
+                <p class="screen-subtitle">And boost your Minning speed<br>by +0.005/h on active miner</p>
+
+                <div class="friends-total-bar">
+                    <span>Total</span>
                     <span id="friends-total-count">0 users</span>
-                    <button class="copy-link-button">Copy Referral Link</button>
                 </div>
-                <div id="friend-list-container">
-                    <!-- Friend items will be loaded here by app.js -->
+
+                <div id="friend-list-container" class="friend-list">
+                    <!-- Friend items will be loaded here -->
+                     <!-- Example structure (will be generated by JS):
+                     <div class="friend-item">
+                         <div class="friend-info">
+                             <div class="friend-avatar"><i class="fas fa-user"></i></div>
+                             <div class="friend-details">
+                                 <span class="friend-name">lamaArjun</span>
+                                 <span class="friend-joined">January 12 at 19:21</span>
+                             </div>
+                         </div>
+                         <div class="friend-status">
+                             <span class="friend-boost">+ 0.005/h</span>
+                             <span class="friend-activity active">Active</span>
+                         </div>
+                     </div>
+                     -->
                 </div>
-                <p id="no-friends-message" style="display: none;">You haven't invited any friends yet.</p>
+                 <p id="no-friends-message" class="no-friends-text" style="display: none;">No friends...</p>
+
+                <button class="copy-link-button friends-copy-button">Copy link</button>
                  <!-- Error Message Area -->
                  <div id="error-message-area-friends" class="error-message" style="display: none;"></div>
             </div>
 
             <!-- Boost Screen -->
             <div id="boost-screen" class="screen">
-                <h2>Boost Mining Speed</h2>
-                <div class="task-list">
-                    <div class="task-item">
-                        <div class="task-info">
-                             <span class="task-icon">🚀</span> <!-- Placeholder Icon -->
-                             <div class="task-details">
-                                 <span class="task-title">Join Community</span>
-                                 <span class="task-reward">+0.005/h</span>
-                             </div>
-                        </div>
-                        <div class="task-action-container">
-                            <!-- Button or Checkmark will be loaded here by app.js -->
-                            <!-- <button id="boost-task-1" class="task-button">Start</button> -->
-                        </div>
-                    </div>
-                    <!-- Add more task items here if needed -->
-                </div>
-                 <!-- Error Message Area -->
-                 <div id="error-message-area-boost" class="error-message" style="display: none;"></div>
+                 <h2 class="screen-title">COMPLETE TASK<br>TO BOOST<br>YOUR MINING SPEED</h2>
+                 <div class="task-list">
+                     <div class="task-item">
+                         <div class="task-icon-boost">
+                             <img src="bita_icon.png" alt="B"> <!-- Replace with your Bita icon path -->
+                         </div>
+                         <div class="task-details-boost">
+                             <span class="task-title">Join our channel</span>
+                             <span class="task-reward">0.005/h</span>
+                         </div>
+                         <div class="task-action-container">
+                             <!-- Button/Checkmark added by JS -->
+                             <!-- <button id="boost-task-1" class="task-button boost-start">Start</button> -->
+                             <!-- <button id="boost-task-1" class="task-button boost-claim">Claim</button> -->
+                             <!-- <span class="task-complete-check">✓</span> -->
+                         </div>
+                     </div>
+                     <!-- Add more tasks here if needed -->
+                 </div>
+                  <!-- Error Message Area -->
+                  <div id="error-message-area-boost" class="error-message" style="display: none;"></div>
             </div>
+
         </main>
 
         <!-- Bottom Navigation -->
-        <nav id="bottom-nav">
-            <div class="nav-item active" data-target="home-screen">
-                <i class="fas fa-home"></i> <!-- Font Awesome icon -->
-                <span>Home</span>
-            </div>
+        <nav class="bottom-nav">
             <div class="nav-item" data-target="friends-screen">
-                 <i class="fas fa-user-friends"></i> <!-- Font Awesome icon -->
+                <i class="fa-solid fa-users"></i>
                 <span>Friends</span>
             </div>
+            <div class="nav-item active" data-target="home-screen">
+                <i class="fa-solid fa-house"></i>
+                <span>Home</span>
+            </div>
             <div class="nav-item" data-target="boost-screen">
-                 <i class="fas fa-rocket"></i> <!-- Font Awesome icon -->
+                <i class="fa-solid fa-rocket"></i> <!-- Using rocket, adjust if needed -->
                 <span>Boost</span>
             </div>
         </nav>
