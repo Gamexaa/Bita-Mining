@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <!-- Telegram SDK Script - Mini App ke liye zaroori -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <title>ß (Bita) Mining App</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Simple icon placeholders - replace with actual icons if needed -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -67,7 +68,7 @@
                              </div>
                         </div>
                         <button class="task-button" id="boost-task-1">Start</button>
-                        <!-- <span class="task-complete-check" style="display: none;">✓</span> -->
+                        <!-- Checkmark yahaan JS se add hoga -->
                     </div>
                      <!-- Add more tasks here if needed -->
                 </div>
@@ -100,36 +101,47 @@
                 <span>Home</span>
             </button>
             <button class="nav-item" data-target="boost-screen">
-                <i class="fas fa-rocket"></i> <!-- Using rocket instead of the custom boost icon -->
+                <i class="fas fa-rocket"></i>
                 <span>Boost</span>
             </button>
         </nav>
     </div>
-      <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script> <!-- Adjust version if needed -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script> <!-- Use firestore or database -->
+
+    <!-- Firebase SDKs (app.js se pehle hone chahiye) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <!-- Agar auth use karna ho toh add karna: <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script> -->
 
     <script>
-      // Firebase configuration jo aapne copy kiya tha
+      // --- Firebase Configuration ---
+      // !! Important: Replace with your actual Firebase config values !!
       const firebaseConfig = {
-        apiKey: "AIzaSyAhUKkVb9RRYzGckeEHaNCR48rOfNS_rXY", // Yahaan apni key daalein
-        authDomain: "bita-mining-app.firebaseapp.com", // Yahaan apna domain daalein
-        projectId: "bita-mining-app", // Yahaan apna project ID daalein
-        storageBucket: "bita-mining-app.firebasestorage.app",
+        apiKey: "AIzaSyAhUKkVb9RRYzGckeEHaNCR48rOfNS_rXY", // Double check this key
+        authDomain: "bita-mining-app.firebaseapp.com",
+        projectId: "bita-mining-app",
+        storageBucket: "bita-mining-app.appspot.com", // Corrected to .appspot.com (Confirm in your Firebase console)
         messagingSenderId: "383835477324",
-        appId: ""1:383835477324:web:608d418b8114fb2d87abe9""
+        appId: "1:383835477324:web:608d418b8114fb2d87abe9" // Corrected: Removed extra quotes
       };
 
       // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-      const auth = firebase.auth();
-      const db = firebase.firestore(); // Agar Firestore use kar rahe hain
-      // const db = firebase.database(); // Agar Realtime Database use kar rahe hain
-
-      console.log("Firebase Initialized!"); // Check karne ke liye ki setup hua ya nahi
+      try {
+          if (firebase.apps.length === 0) { // Initialize only if not already done
+             firebase.initializeApp(firebaseConfig);
+             console.log("Firebase Initialized!");
+          } else {
+             console.log("Firebase already initialized.");
+          }
+      } catch (e) {
+          console.error("Firebase initialization failed:", e);
+          // Show an error message to the user maybe?
+          document.body.innerHTML = "<div style='color:white; padding: 20px;'>Error connecting to database. Please try again later.</div>";
+      }
+      // --- End Firebase Configuration ---
     </script>
 
-    <script src="app.js"></script> <!-- Aapka JS file iske baad aayega -->
-</body>  
+    <!-- Aapka App Logic (Firebase init ke baad) -->
+    <script src="app.js"></script>
+
+</body>
 </html>
