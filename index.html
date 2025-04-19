@@ -3,145 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <!-- Telegram SDK Script - Mini App ke liye zaroori -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <title>ß (Bita) Mining App</title>
+    <title>Bita Mining</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Link Font Awesome (Optional, agar icons use karne hain) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Firebase SDKs (Replace with your actual Firebase project config) -->
+    <!-- Get these from your Firebase project settings > SDK setup & configuration -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script> -->
+    <!-- <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script> -->
+
 </head>
 <body>
-    <div class="app-container">
-
-        <!-- Main Content Area (Dynamically Swapped) -->
-        <div id="main-content">
-
+    <div id="app-container">
+        <!-- Screens Container -->
+        <main id="screens-container">
             <!-- Home Screen -->
             <div id="home-screen" class="screen active">
-                <header class="home-header">
-                    <div class="balance-circle">
-                        <span class="crypto-symbol">$ß</span>
-                        <span id="balance">0000.0000</span>
-                        <span id="usd-equivalent">( $000.00 )</span>
+                <div class="balance-section">
+                    <div class="balance-label">Your Balance (Bita)</div>
+                    <div id="balance" class="balance-amount">0.0000</div>
+                    <div id="usd-equivalent" class="usd-value">( $0.00 )</div>
+                </div>
+
+                <div class="mining-info">
+                    <div class="info-box">
+                        <span class="info-label">Mining Timer</span>
+                        <span id="mining-timer" class="info-value">00:00:00</span>
                     </div>
-                </header>
-
-                <main class="home-main">
-                    <div class="info-grid">
-                        <div class="info-box">
-                            <i class="fas fa-users icon"></i>
-                            <span class="label">Active referral</span>
-                            <span id="active-referrals" class="value">0</span>
-                        </div>
-                        <div class="info-box">
-                            <i class="fas fa-user-friends icon"></i>
-                            <span class="label">Total referral</span>
-                            <span id="total-referrals" class="value">0</span>
-                        </div>
-                        <div class="info-box">
-                            <i class="fas fa-clock icon"></i>
-                            <span class="label">Mining time left</span>
-                            <span id="mining-timer" class="value">00:00:00</span>
-                        </div>
-                        <div class="info-box">
-                            <i class="fas fa-bolt icon"></i>
-                            <span class="label">Total mining speed</span>
-                            <span id="mining-speed" class="value">0.015/h</span>
-                        </div>
+                    <div class="info-box">
+                        <span class="info-label">Mining Speed</span>
+                        <span id="mining-speed" class="info-value">0.015/h</span>
                     </div>
+                     <div class="info-box">
+                        <span class="info-label">Active Refs</span>
+                        <span id="active-referrals" class="info-value">0</span>
+                    </div>
+                     <div class="info-box">
+                        <span class="info-label">Total Refs</span>
+                        <span id="total-referrals" class="info-value">0</span>
+                    </div>
+                </div>
 
-                    <p class="mining-instruction">Start mining every 24 hours for max ß potential !</p>
+                <div class="mining-action">
+                     <p class="mining-instruction">Start mining every 24 hours for max ß potential!</p>
+                     <button id="mining-button" class="primary-button">Start Mining</button>
+                </div>
+                 <!-- Error Message Area -->
+                 <div id="error-message-area" class="error-message" style="display: none;"></div>
+            </div>
 
-                    <button id="mining-button">Start Mining</button>
-                </main>
+            <!-- Friends Screen -->
+            <div id="friends-screen" class="screen">
+                <h2>Friends</h2>
+                <div class="friends-summary">
+                    <span id="friends-total-count">0 users</span>
+                    <button class="copy-link-button">Copy Referral Link</button>
+                </div>
+                <div id="friend-list-container">
+                    <!-- Friend items will be loaded here by app.js -->
+                </div>
+                <p id="no-friends-message" style="display: none;">You haven't invited any friends yet.</p>
+                 <!-- Error Message Area -->
+                 <div id="error-message-area-friends" class="error-message" style="display: none;"></div>
             </div>
 
             <!-- Boost Screen -->
             <div id="boost-screen" class="screen">
-                <h2 class="screen-title">COMPLETE TASK TO BOOST YOUR MINING SPEED</h2>
+                <h2>Boost Mining Speed</h2>
                 <div class="task-list">
                     <div class="task-item">
                         <div class="task-info">
-                             <span class="task-icon">ß</span> <!-- Simple B icon -->
+                             <span class="task-icon">🚀</span> <!-- Placeholder Icon -->
                              <div class="task-details">
-                                 <span>Join our channel</span>
-                                 <span class="task-boost">0.005/h</span>
+                                 <span class="task-title">Join Community</span>
+                                 <span class="task-reward">+0.005/h</span>
                              </div>
                         </div>
-                        <button class="task-button" id="boost-task-1">Start</button>
-                        <!-- Checkmark yahaan JS se add hoga -->
+                        <div class="task-action-container">
+                            <!-- Button or Checkmark will be loaded here by app.js -->
+                            <!-- <button id="boost-task-1" class="task-button">Start</button> -->
+                        </div>
                     </div>
-                     <!-- Add more tasks here if needed -->
+                    <!-- Add more task items here if needed -->
                 </div>
+                 <!-- Error Message Area -->
+                 <div id="error-message-area-boost" class="error-message" style="display: none;"></div>
             </div>
-
-            <!-- Friends Screen -->
-             <div id="friends-screen" class="screen">
-                <h2 class="screen-title invite-title">INVITE FRIENDS<br>And boost your Minning speed by +0.005/h on active miner</h2>
-                 <div class="total-friends">
-                     <span>Total</span>
-                     <span id="friends-total-count">0 users</span>
-                 </div>
-                <div id="friend-list-container" class="friend-list">
-                    <!-- Friend items will be added here by JS -->
-                     <p id="no-friends-message" style="text-align: center; margin-top: 40px; color: #aaa;">No friends...</p>
-                </div>
-                 <button class="copy-link-button">Copy link</button>
-            </div>
-
-        </div>
+        </main>
 
         <!-- Bottom Navigation -->
-        <nav class="bottom-nav">
-            <button class="nav-item" data-target="friends-screen">
-                <i class="fas fa-user-friends"></i>
-                <span>Friends</span>
-            </button>
-            <button class="nav-item active" data-target="home-screen">
-                <i class="fas fa-home"></i>
+        <nav id="bottom-nav">
+            <div class="nav-item active" data-target="home-screen">
+                <i class="fas fa-home"></i> <!-- Font Awesome icon -->
                 <span>Home</span>
-            </button>
-            <button class="nav-item" data-target="boost-screen">
-                <i class="fas fa-rocket"></i>
+            </div>
+            <div class="nav-item" data-target="friends-screen">
+                 <i class="fas fa-user-friends"></i> <!-- Font Awesome icon -->
+                <span>Friends</span>
+            </div>
+            <div class="nav-item" data-target="boost-screen">
+                 <i class="fas fa-rocket"></i> <!-- Font Awesome icon -->
                 <span>Boost</span>
-            </button>
+            </div>
         </nav>
     </div>
 
-    <!-- Firebase SDKs (app.js se pehle hone chahiye) -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-    <!-- Agar auth use karna ho toh add karna: <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script> -->
-
-    <script>
-      // --- Firebase Configuration ---
-      // !! Important: Replace with your actual Firebase config values !!
-      const firebaseConfig = {
-        apiKey: "AIzaSyAhUKkVb9RRYzGckeEHaNCR48rOfNS_rXY", // Double check this key
-        authDomain: "bita-mining-app.firebaseapp.com",
-        projectId: "bita-mining-app",
-        storageBucket: "bita-mining-app.appspot.com", // Corrected to .appspot.com (Confirm in your Firebase console)
-        messagingSenderId: "383835477324",
-        appId: "1:383835477324:web:608d418b8114fb2d87abe9" // Corrected: Removed extra quotes
-      };
-
-      // Initialize Firebase
-      try {
-          if (firebase.apps.length === 0) { // Initialize only if not already done
-             firebase.initializeApp(firebaseConfig);
-             console.log("Firebase Initialized!");
-          } else {
-             console.log("Firebase already initialized.");
-          }
-      } catch (e) {
-          console.error("Firebase initialization failed:", e);
-          // Show an error message to the user maybe?
-          document.body.innerHTML = "<div style='color:white; padding: 20px;'>Error connecting to database. Please try again later.</div>";
-      }
-      // --- End Firebase Configuration ---
-    </script>
-
-    <!-- Aapka App Logic (Firebase init ke baad) -->
+    <!-- Your App Logic -->
     <script src="app.js"></script>
-
 </body>
 </html>
