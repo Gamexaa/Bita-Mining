@@ -494,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             // Updated referral link with correct bot username
-            const linkToCopy = `https://t.me/BitaMiningbot/Play=${currentUserId}`; // Correct Bot Username
+            const linkToCopy = `https://t.me/BitaMiningbot/Start=${currentUserId}`; // Correct Bot Username
             navigator.clipboard.writeText(linkToCopy)
                 .then(() => { alert('Invite link copied!'); })
                 .catch(err => { console.error('Failed to copy link: ', err); alert('Could not copy link.'); });
