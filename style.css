@@ -383,6 +383,9 @@ body {
 .task-action-container {
     min-width: 85px; /* Ensure space for button/check */
     text-align: right;
+    display: flex; /* Added for centering image */
+    justify-content: center; /* Added for centering image */
+    align-items: center; /* Added for centering image */
 }
 
 .task-button { /* General style for task buttons */
@@ -412,10 +415,10 @@ body {
     cursor: not-allowed;
 }
 
-.task-complete-check {
-    font-size: 1.8em;
-    color: #34c759; /* Green checkmark */
-    font-weight: bold;
+/* Style for the custom tick image */
+.task-complete-image {
+    width: 28px; /* Adjust size as needed */
+    height: 28px;
 }
 
 

@@ -6,7 +6,7 @@
     <title>Bita Mining</title>
     <link rel="stylesheet" href="style.css">
     <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Firebase SDKs (v8 Syntax) -->
@@ -18,7 +18,6 @@
 <body>
     <!-- Loading Indicator -->
     <div id="loading-indicator">
-        <!-- Ensure 'bita_logo.png' is in the same folder as index.html -->
         <img src="bita_logo.png" alt="Loading Bita Mining...">
     </div>
 
@@ -56,6 +55,8 @@
                     <p class="mining-instruction">Start mining every 24 hours for max ß potential !</p>
                     <button id="mining-button" class="mining-button-style">Start Mining</button>
                 </div>
+                <!-- Debug Display Area (Hidden by default, can be enabled in JS for testing) -->
+                <div id="debug-area" style="position: fixed; bottom: 70px; left: 5px; background: rgba(0,0,0,0.6); color: white; font-size: 9px; padding: 3px; z-index: 10001; display: none;"></div>
                 <div id="error-message-area-home" class="error-message" style="display: none;"></div>
             </div>
 
@@ -85,10 +86,12 @@
                              <span class="task-title">Join our channel</span>
                              <span class="task-reward">0.005/h</span>
                          </div>
+                         <!-- Container for button/tick image -->
                          <div id="boost-task-1-action" class="task-action-container">
-                             <!-- Button/Checkmark added by JS -->
+                             <!-- Button/Image added by JS -->
                          </div>
                      </div>
+                     <!-- Add more tasks here if needed -->
                  </div>
                   <div id="error-message-area-boost" class="error-message" style="display: none;"></div>
             </div>
@@ -112,6 +115,6 @@
     </div>
 
     <!-- App Logic - Load Last -->
-    <script src="app.js"></script>
+    <script src="app.js" defer></script> <!-- Added defer -->
 </body>
 </html>

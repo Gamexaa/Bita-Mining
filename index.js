@@ -14,15 +14,15 @@ try {
 
 
 exports.processReferral = functions.firestore
-  .document("users/{newUserId}") // Trigger jab 'users' collection mein naya document bane
+  .document("users/{newUserId}") // Trigger when a new document is created in 'users'
   .onCreate(async (snap, context) => {
     const newUserDoc = snap.data();
     const newUserId = context.params.newUserId;
 
-    // Check karo ki naye user ke data mein 'referredBy' field hai ya nahi
+    // 1. Check if the new user has a 'referredBy' field
     const referrerId = newUserDoc.referredBy;
 
-    // Agar referrer ID nahi hai, ya user ne khud ko refer kiya, toh kuch mat karo
+    // 2. Exit if no referrer ID or if it's a self-referral
     if (!referrerId || referrerId === newUserId) {
       console.log(`User ${newUserId} not referred or self-referred.`);
       return null;
@@ -31,32 +31,31 @@ exports.processReferral = functions.firestore
     console.log(`Processing referral: New User ${newUserId} referred by ${referrerId}`);
 
     const db = admin.firestore();
-    // Referrer user ka document reference banao (ID string honi chahiye)
+    // 3. Get a reference to the referrer's document
     const referrerRef = db.collection("users").doc(String(referrerId));
 
     try {
-      // Transaction use karo taaki count update safe ho
+      // 4. Use a transaction for safe update
       await db.runTransaction(async (transaction) => {
         const referrerDoc = await transaction.get(referrerRef);
 
         if (!referrerDoc.exists) {
           console.error(`Referrer user ${referrerId} not found! Cannot update.`);
-          return; // Referrer nahi mila toh transaction se bahar
+          return; // Stop transaction if referrer doesn't exist
         }
 
-        // Referrer ka totalReferrals count 1 se badhao
+        // 5. Prepare the update: Increment totalReferrals
         const increment = admin.firestore.FieldValue.increment(1);
-
-        // Yahan aap future mein active referral aur speed ka logic add kar sakte hain
         const updateData = {
             totalReferrals: increment
-            // activeReferrals: admin.firestore.FieldValue.increment(1), // Example: Simple increment for active
-            // referralSpeed: admin.firestore.FieldValue.increment(0.005) // Example: Add speed
+            // Add logic here later for activeReferrals or referralSpeed if needed
+            // activeReferrals: admin.firestore.FieldValue.increment(1),
+            // referralSpeed: admin.firestore.FieldValue.increment(0.005)
         };
 
-        console.log(`Updating referrer ${referrerId} with:`, { totalReferrals: "+1" }); // Log the intended update
+        console.log(`Updating referrer ${referrerId} with:`, { totalReferrals: "+1" });
 
-        // Referrer ke document ko transaction mein update karo
+        // 6. Update the referrer's document within the transaction
         transaction.update(referrerRef, updateData);
       });
 
@@ -64,8 +63,8 @@ exports.processReferral = functions.firestore
       return null;
 
     } catch (error) {
-      console.error(`Error processing referral for ${newUserId} by ${referrerId}:`, error);
-      return null;
+      console.error(`Error processing referral transaction for ${newUserId} by ${referrerId}:`, error);
+      return null; // Exit on error
     }
   });
 
