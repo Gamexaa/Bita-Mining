@@ -651,6 +651,26 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("[DEBUG] Value assigned to referrerIdFromLink:", referrerIdFromLink);
             // <<< END DEBUGGING BLOCK FOR REFERRAL >>>
 
+          // <<<--- VISIBLE TEST: Display Referrer ID on Home Screen ---<<<
+try {
+    const tempReferrerDisplay = document.createElement('p');
+    tempReferrerDisplay.id = 'debug-referrer-display';
+    tempReferrerDisplay.style.position = 'fixed';
+    tempReferrerDisplay.style.top = '10px';
+    tempReferrerDisplay.style.left = '10px';
+    tempReferrerDisplay.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    tempReferrerDisplay.style.color = 'lime';
+    tempReferrerDisplay.style.padding = '5px';
+    tempReferrerDisplay.style.fontSize = '10px';
+    tempReferrerDisplay.style.zIndex = '10000';
+    tempReferrerDisplay.textContent = `Ref ID: ${referrerIdFromLink || 'NONE'}`; // Display ID or NONE
+    document.body.appendChild(tempReferrerDisplay);
+    console.log("[DEBUG] Displaying referrer ID on screen.");
+} catch (e) {
+    console.error("[DEBUG] Error adding debug display:", e);
+}
+// <<<--- END OF VISIBLE TEST --->>> //
+
             tg.expand();
             tg.BackButton.onClick(() => {
                  if (!document.getElementById('home-screen')?.classList.contains('active')) switchScreen('home-screen');
