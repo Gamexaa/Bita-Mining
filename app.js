@@ -455,7 +455,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
      async function loadUserDataFromFirestore() {
-        if (!currentUserId || !firebaseInitialized) {
+    const loader = document.getElementById('loading-indicator'); // <<<--- YEH LINE ADD KARO
+
+    // Baaki ka code jaisa tha waisa hi rahega...
+    if (!currentUserId || !firebaseInitialized) {
             console.error("Cannot load user data: User ID or Firebase missing.");
              showErrorMessage("Failed to load user data. Please restart.", "home");
             return;
@@ -466,9 +469,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const doc = await userRef.get();
-            if (doc.exists) {
-                const userData = doc.data();
-                console.log("User data loaded:", userData);
+                if (doc.exists) {
+        const userData = doc.data();
+        console.log("User data loaded:", userData);
+        // ... baaki ka data update karne wala code ...
+
+        // <<<--- YEH LINE ADD KARO (Success Case) --->>>
+        if (loader) loader.classList.add('hidden');
+
+    } else { ... }
                 // Update local state
                 balance = userData.balance ?? 0; // Use nullish coalescing
                 miningEndTime = userData.miningEndTime?.toMillis() ?? 0;
@@ -508,6 +517,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Error loading user data:", error);
             showErrorMessage("Failed to load data. Check connection.", "home");
+
+    // <<<--- YEH LINE ADD KARO (Error Case) --->>>
+    if (loader) loader.classList.add('hidden');
         }
     }
 
