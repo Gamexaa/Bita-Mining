@@ -229,7 +229,7 @@ body {
     font-size: 1.1em;
     overflow: hidden; /* Hide image overflow */
 }
-.friend-avatar img {
+.friend-avatar img { /* Style for potential future images */
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -314,17 +314,17 @@ body {
     align-items: center;
 }
 
-.task-icon-boost {
+.task-icon-boost { /* Using Font Awesome now */
     width: 40px;
     height: 40px;
-    border-radius: 8px; /* Slightly rounded icon bg */
-    overflow: hidden; /* Clip image */
+    background-color: #3a3a3c; /* Slightly different bg for icon */
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.6em; /* Adjust icon size */
+    color: #007aff; /* Icon color (e.g., Telegram blue) */
     margin-right: 15px;
-}
-.task-icon-boost img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
 }
 
 .task-details-boost {
@@ -333,13 +333,13 @@ body {
     flex-direction: column;
 }
 
-.task-title {
+.task-title { /* Reusing general title style */
     font-weight: 500;
     font-size: 1em;
     color: #ffffff;
 }
 
-.task-reward {
+.task-reward { /* Reusing general reward style */
     font-size: 0.85em;
     color: #34c759; /* Green reward text */
 }
@@ -366,7 +366,12 @@ body {
      background-color: #007aff; /* Blue */
      color: #ffffff;
 }
-.task-button:disabled {
+.task-button.boost-claiming { /* Style for 'Claiming...' state */
+    background-color: #555;
+    color: #aaa;
+    cursor: not-allowed;
+}
+.task-button:disabled { /* General disabled state */
     opacity: 0.6;
     cursor: not-allowed;
 }
@@ -380,8 +385,7 @@ body {
 
 /* --- Bottom Navigation --- */
 .bottom-nav {
-    position: fixed; /* Changed from fixed for better compatibility sometimes */
-   /* position: absolute; */ /* Try absolute if fixed causes issues with viewport height */
+    position: fixed; /* Stick to bottom */
     bottom: 0;
     left: 0;
     width: 100%;
@@ -390,7 +394,7 @@ body {
     border-top: 1px solid #3a3a3c; /* Subtle top border */
     display: flex;
     justify-content: space-around;
-    align-items: center;
+    align-items: stretch; /* Stretch items vertically */
     z-index: 100; /* Keep on top */
 }
 
@@ -398,22 +402,25 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: center; /* Center content vertically */
     cursor: pointer;
     color: #8e8e93; /* Default grey icon/text */
     flex-grow: 1;
-    padding-top: 5px; /* Adjust spacing */
+    /* padding-top: 5px; Remove fixed padding-top */
     transition: color 0.2s ease;
+    text-decoration: none; /* Remove underline from potential links */
 }
 
 .nav-item i {
     font-size: 1.6em; /* Larger icons */
-    margin-bottom: 4px;
+    margin-bottom: 4px; /* Space between icon and text */
+    line-height: 1; /* Prevent extra space */
 }
 
 .nav-item span {
     font-size: 0.7em; /* Smaller text */
     font-weight: 500;
+    line-height: 1;
 }
 
 .nav-item.active {
@@ -436,4 +443,5 @@ body {
     max-width: 450px;
     text-align: center;
     font-size: 0.9em;
+    z-index: 10; /* Ensure visible */
 }
