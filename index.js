@@ -1,3 +1,5 @@
+// --- START OF FILE index.js ---
+
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
@@ -84,3 +86,5 @@ exports.processReferral = functions.firestore
 //   const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
 //   return !!(lastLogin && lastLogin > oneDayAgo);
 // }
+
+// --- END OF FILE index.js ---

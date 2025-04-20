@@ -191,7 +191,8 @@ document.addEventListener('DOMContentLoaded', () => {
             button.className = 'task-button boost-start'; // Default class
             button.textContent = "Start";
             // Add the specific click listener for the boost button
-            button.addEventListener('click', handleBoostTaskClick);
+            button.removeEventListener('click', handleBoostTaskClick); // Remove first
+            button.addEventListener('click', handleBoostTaskClick); // Add again
             boostTaskActionContainer.appendChild(button);
         }
     }
@@ -415,71 +416,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Firebase & Data Handling ---
-     function initFirebase() { // <<<--- FIREBASE INITIALIZATION FUNCTION DEFINITION ---<<<
-        // This function now contains the actual Firebase initialization code
-        if (firebaseInitialized) {
-             // console.log("Firebase already initialized."); // Optional: Less verbose log
-             return true;
-        }
+     function initFirebase() { // Firebase Initialization Function Definition
+        if (firebaseInitialized) return true;
         console.log("Initializing Firebase...");
         try {
-            // Initialize Firebase using v8 syntax (since scripts are loaded in HTML)
-            if (!firebase.apps.length) { // Check if already initialized
-                firebase.initializeApp(firebaseConfig); // Use the config defined above
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
                 console.log("Firebase initialized successfully.");
             } else {
-                firebase.app(); // Get default app if already initialized
+                firebase.app();
                 console.log("Using existing Firebase app instance.");
             }
-
-            // Optional: Initialize Analytics if needed (using v8 syntax)
-            // if (typeof firebase.analytics === 'function') {
-            //     firebase.analytics();
-            //     console.log("Firebase Analytics initialized.");
-            // }
-
-            // Check if Firestore service is available
-            firebase.firestore();
+            firebase.firestore(); // Check Firestore availability
             console.log("Firestore service is available.");
-
-            firebaseInitialized = true; // Set the flag indicating success
-            return true; // Indicate success
-
+            firebaseInitialized = true;
+            return true;
         } catch (e) {
             console.error("Firebase initialization or Firestore check failed:", e);
-            firebaseInitialized = false; // Ensure flag is false on failure
-            alert("Critical Error: Could not connect to Firebase services. Please restart the app."); // Use alert as fallback here
-            return false; // Indicate failure
+            firebaseInitialized = false;
+            alert("Critical Error: Could not connect to Firebase services.");
+            return false;
         }
-    } // <<<--- END OF initFirebase FUNCTION DEFINITION ---<<<
+    } // End of initFirebase Function Definition
 
 
-     async function loadUserDataFromFirestore() {
-    const loader = document.getElementById('loading-indicator'); // <<<--- YEH LINE ADD KARO
+     async function loadUserDataFromFirestore() { // <<<--- UPDATED FUNCTION ---<<<
+        const loader = document.getElementById('loading-indicator');
+        console.log("[LOAD_DATA] Function started. Loader found:", !!loader);
 
-    // Baaki ka code jaisa tha waisa hi rahega...
-    if (!currentUserId || !firebaseInitialized) {
-            console.error("Cannot load user data: User ID or Firebase missing.");
-             showErrorMessage("Failed to load user data. Please restart.", "home");
-            return;
+        if (!currentUserId || !firebaseInitialized) {
+            console.error("[LOAD_DATA] Cannot load: No user ID or Firebase init failed.");
+            showErrorMessage("Failed to load user data. Please restart.", "home");
+            if (loader) {
+                console.log("[LOAD_DATA] Hiding loader (early exit).");
+                loader.classList.add('hidden'); // Hide on early exit
+            }
+            return; // Exit the function
         }
-        console.log("Loading user data from Firestore...");
+
+        console.log("[LOAD_DATA] Attempting DB connection...");
         const db = firebase.firestore();
         const userRef = db.collection('users').doc(currentUserId);
+        console.log(`[LOAD_DATA] Attempting to get userRef: users/${currentUserId}`);
 
         try {
-            const doc = await userRef.get();
-                if (doc.exists) {
-        const userData = doc.data();
-        console.log("User data loaded:", userData);
-        // ... baaki ka data update karne wala code ...
+            console.log("[LOAD_DATA] BEFORE userRef.get()");
+            const doc = await userRef.get(); // <<<--- THIS IS OFTEN WHERE IT GETS STUCK OR ERRORS
+            console.log("[LOAD_DATA] AFTER userRef.get(). Doc exists:", doc.exists);
 
-        // <<<--- YEH LINE ADD KARO (Success Case) --->>>
-        if (loader) loader.classList.add('hidden');
-
-    } else { ... }
-                // Update local state
-                balance = userData.balance ?? 0; // Use nullish coalescing
+            if (doc.exists) {
+                const userData = doc.data();
+                console.log("[LOAD_DATA] SUCCESS: User doc exists. Processing data...");
+                // Update local state variables
+                balance = userData.balance ?? 0;
                 miningEndTime = userData.miningEndTime?.toMillis() ?? 0;
                 baseMiningSpeed = userData.baseMiningSpeed ?? 0.015;
                 boostSpeed = userData.boostSpeed ?? 0;
@@ -487,41 +476,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalReferrals = userData.totalReferrals ?? 0;
                 activeReferrals = userData.activeReferrals ?? 0;
                 boostTask1Completed = userData.boostTask1Completed ?? false;
-                // TODO: Fetch friend data separately if needed
-                // friends = await fetchFriends();
+                // friends = await fetchFriends(); // Placeholder for fetching friends
 
-                // Check mining status AFTER loading data
+                // Check mining status
                 const now = Date.now();
-                if (miningEndTime > now) {
-                    isMining = true;
-                    console.log("Resuming mining session.");
-                } else {
-                    isMining = false;
-                    if (miningEndTime > 0) { // If it had an end time but it passed
-                        console.log("Previous mining session expired.");
-                        // Optionally clear the expired time in Firestore if desired (non-critical)
-                        // userRef.update({ miningEndTime: null }).catch(e=>console.warn("Couldn't clear expired time", e));
-                    }
-                }
-                 // Update UI based on loaded data
+                if (miningEndTime > now) { isMining = true; } else { isMining = false; }
+                console.log("[LOAD_DATA] State updated. Mining:", isMining);
+
+                // Update UI
                 updateBoostTaskUI();
                 updateDisplay();
-                startTimer(); // Always start timer to show countdown or 00:00:00
+                startTimer(); // Start visual timer
+                console.log("[LOAD_DATA] Initial UI updated.");
 
             } else {
-                console.error(`Firestore document for user ${currentUserId} not found! Should have been created.`);
-                 showErrorMessage("User data not found. Please contact support if this persists.", "home");
-                 // Consider creating it again ONLY if absolutely sure handleFirebaseLoginUsingTMA failed silently
-                 // handleFirebaseLoginUsingTMA(currentUserData); // Risky!
+                console.error(`[LOAD_DATA] User document for ${currentUserId} NOT FOUND!`);
+                showErrorMessage("User data not found. Contact support.", "home");
+                // Loader will be hidden in 'finally'
             }
         } catch (error) {
-            console.error("Error loading user data:", error);
-            showErrorMessage("Failed to load data. Check connection.", "home");
-
-    // <<<--- YEH LINE ADD KARO (Error Case) --->>>
-    if (loader) loader.classList.add('hidden');
+            console.error("[LOAD_DATA] CATCH ERROR loading user data:", error);
+            // Check for specific errors like permission denied
+            if (error.code === 'permission-denied') {
+                 showErrorMessage("Error: Cannot access data. Check rules.", "home");
+            } else {
+                 showErrorMessage("Failed to load data. Check connection.", "home");
+            }
+            // Loader will be hidden in 'finally'
+        } finally {
+            // --- ENSURE LOADER IS ALWAYS HIDDEN ---
+            if (loader) {
+                console.log("[LOAD_DATA] FINALLY block: Hiding loader.");
+                loader.classList.add('hidden');
+            } else {
+                console.warn("[LOAD_DATA] FINALLY block: Loader element not found!");
+            }
+            console.log("[LOAD_DATA] Function finished.");
         }
-    }
+     } // <<<--- END OF UPDATED loadUserDataFromFirestore FUNCTION ---<<<
+
 
     // --- User Login/Registration ---
     async function handleFirebaseLoginUsingTMA(tmaUserData) {
@@ -548,7 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 await userRef.update(updatePayload);
                 console.log("Existing user updated.");
-                await loadUserDataFromFirestore(); // Load data after update
+                // Don't call loadUserDataFromFirestore here, it will be called after this function finishes in initializeApp
 
             } else {
                 // --- NEW USER ---
@@ -579,160 +572,136 @@ document.addEventListener('DOMContentLoaded', () => {
                     boostTask1Completed: false,
                     referredBy: referredByUserId // Use the potentially corrected value
                 };
-                 console.log("[DEBUG] Creating defaultData object:", defaultData); // Optional: Dekho poora object kaisa ban raha hai
+                 console.log("[DEBUG] Creating defaultData object:", defaultData);
                 await userRef.set(defaultData);
                 console.log("New user document created.");
-                await loadUserDataFromFirestore(); // Load data for the new user
+                // Don't call loadUserDataFromFirestore here, let initializeApp call it after
 
                 // --- Trigger Backend (Reminder) ---
                 if (referredByUserId) {
                     console.log(`User ${currentUserId} referred by ${referredByUserId}.`);
                     console.warn("REMINDER: Backend Cloud Function needed to update referrer's count!");
-                    // Example trigger (requires functions SDK):
-                    // try {
-                    //   const processReferral = firebase.functions().httpsCallable('processReferral');
-                    //   await processReferral({ referredUserId: currentUserId, referrerId: referredByUserId });
-                    //   console.log("Cloud function for referral triggered.");
-                    // } catch(err) { console.error("Error triggering referral cloud function", err); }
+                    // Cloud Function trigger logic might go here if using callable functions
                 }
             }
         } catch (error) {
             console.error("Error during Firebase login/registration:", error);
             showErrorMessage("Failed to process login. Please restart.", "home");
+             throw error; // Re-throw error so initializeApp knows it failed
         }
     }
 
     // --- Event Listeners Setup ---
     function setupEventListeners() {
         console.log("Setting up event listeners...");
-
-        // Remove potentially existing listeners before adding new ones
+        // Clear previous listeners first to prevent duplicates
         navItems.forEach(item => item.removeEventListener('click', handleNavClick));
         if (miningButton) miningButton.removeEventListener('click', handleMiningClick);
         if (copyLinkButton) copyLinkButton.removeEventListener('click', handleCopyLinkClick);
-        // Boost button listener is added/removed in updateBoostTaskUI
-
-        // Add listeners
+        // Add new listeners
         navItems.forEach(item => item.addEventListener('click', handleNavClick));
         if (miningButton) miningButton.addEventListener('click', handleMiningClick);
         if (copyLinkButton) copyLinkButton.addEventListener('click', handleCopyLinkClick);
-
+        // Boost button listener is managed by updateBoostTaskUI
         console.log("Event listeners attached.");
     }
 
     // --- Event Handlers ---
     function handleNavClick(event) {
-        // Use currentTarget to ensure it's the element the listener was attached to
         const targetId = event.currentTarget.dataset.target;
-        if (targetId) {
-            switchScreen(targetId);
-        }
+        if (targetId) switchScreen(targetId);
     }
-
     function handleMiningClick() {
-         if (!isMining) {
-             startMining();
-         } else {
-             console.log("Mining button clicked while mining.");
-             tg?.showPopup({ message: 'Mining session already active!' });
-         }
-     }
-
-    function handleCopyLinkClick() {
+         if (!isMining) startMining();
+         else tg?.showPopup({ message: 'Mining session already active!' });
+    }
+     function handleCopyLinkClick() {
          if (!currentUserId || !isTmaEnvironment) {
-             showErrorMessage("Cannot create link.", "friends");
-             return;
+             showErrorMessage("Cannot create link.", "friends"); return;
          }
-         const miniAppShortName = 'Play'; // <<< CONFIRM FROM BOTFATHER
-         const botUsername = "BitaMiningbot"; // <<< CONFIRM USERNAME
+         const miniAppShortName = 'Play'; // <<< CONFIRM
+         const botUsername = "BitaMiningbot"; // <<< CONFIRM
          const linkToCopy = `https://t.me/${botUsername}/${miniAppShortName}?start=${currentUserId}`;
-
          console.log("Copying link:", linkToCopy);
          if (tg && tg.clipboardWriteText) {
-             tg.clipboardWriteText(linkToCopy, (success) => {
-                 if (success) {
-                     tg.showPopup({ message: 'Referral link copied!' });
-                 } else {
-                     navigator.clipboard.writeText(linkToCopy).then(() => {
-                         tg?.showPopup({ message: 'Link copied!' });
-                     }).catch(err => showErrorMessage('Could not copy link.', 'friends'));
-                 }
-             });
-         } else { // Fallback
-             navigator.clipboard.writeText(linkToCopy).then(() => {
-                 alert('Referral link copied!');
-             }).catch(err => showErrorMessage('Could not copy link.', 'friends'));
-         }
+             tg.clipboardWriteText(linkToCopy, (ok) => ok ? tg.showPopup({ message: 'Referral link copied!' }) : copyFallback(linkToCopy));
+         } else { copyFallback(linkToCopy); }
      }
+     function copyFallback(text) { // Helper for clipboard fallback
+        navigator.clipboard.writeText(text).then(() => {
+             tg?.showPopup({ message: 'Link copied!' }); // Try showing popup anyway
+             alert('Referral link copied!'); // Alert as ultimate fallback
+        }).catch(err => showErrorMessage('Could not copy link.', 'friends'));
+     }
+
 
     // --- Application Initialization ---
     function initializeApp() {
         console.log("initializeApp called");
-        // Check if running in Telegram
         if (tg && tg.initData) {
             console.log("TMA Environment detected.");
             isTmaEnvironment = true;
-            tg.ready(); // Inform SDK the app UI is ready
+            tg.ready();
 
-            // <<< START DEBUGGING BLOCK >>>
+            // <<< START DEBUGGING BLOCK FOR REFERRAL >>>
             console.log("[DEBUG] Checking initData...");
-            console.log("[DEBUG] tg.initDataUnsafe:", tg.initDataUnsafe); // Poora object dekho
+            console.log("[DEBUG] tg.initDataUnsafe:", tg.initDataUnsafe);
             referrerIdFromLink = tg.initDataUnsafe?.start_param;
-            console.log("[DEBUG] Read start_param value:", tg.initDataUnsafe?.start_param); // Specific value dekho
-            console.log("[DEBUG] Value assigned to referrerIdFromLink:", referrerIdFromLink); // Variable mein kya gaya?
-            // <<< END DEBUGGING BLOCK >>>
-
-             if (referrerIdFromLink) { // Original log
-                 console.log(`App launched with referral ID (start_param): ${referrerIdFromLink}`);
-             } else {
-                 console.log("App launched without referral ID.");
-             }
-
+            console.log("[DEBUG] Read start_param value:", referrerIdFromLink);
+            console.log("[DEBUG] Value assigned to referrerIdFromLink:", referrerIdFromLink);
+            // <<< END DEBUGGING BLOCK FOR REFERRAL >>>
 
             tg.expand();
-            tg.BackButton.onClick(() => { // Back button logic
-                 if (!document.getElementById('home-screen')?.classList.contains('active')) {
-                      switchScreen('home-screen');
-                 }
+            tg.BackButton.onClick(() => {
+                 if (!document.getElementById('home-screen')?.classList.contains('active')) switchScreen('home-screen');
             });
-            tg.BackButton.hide(); // Hide initially
+            tg.BackButton.hide();
 
-            // Get User Data
             currentUserData = tg.initDataUnsafe?.user;
             if (currentUserData?.id) {
                 currentUserId = String(currentUserData.id);
                 console.log("User ID obtained:", currentUserId);
 
-                // Initialize Firebase (essential step)
-                if (initFirebase()) { // <<<--- CALLING THE INITIALIZATION FUNCTION ---<<<
-                     console.log("Firebase initialized successfully.");
-                     // Now proceed with user login/data loading and UI setup
-                     handleFirebaseLoginUsingTMA(currentUserData) // This now also loads data
+                if (initFirebase()) { // <<<--- CALLING initFirebase() ---<<<
+                     console.log("Firebase initialization sequence starting...");
+                     handleFirebaseLoginUsingTMA(currentUserData)
                          .then(() => {
-                              console.log("Login/Data load sequence complete.");
-                              setupEventListeners(); // Setup listeners AFTER data might be loaded
-                              switchScreen('home-screen'); // Ensure starting screen is active
-                              startTimer(); // Start timer to show 00:00:00 or countdown
+                              console.log("Firebase login/registration complete. Loading user data...");
+                              // Load data AFTER login/registration attempt is finished
+                              return loadUserDataFromFirestore(); // Return promise
+                         })
+                         .then(() => {
+                              console.log("User data loading sequence complete.");
+                              setupEventListeners();
+                              switchScreen('home-screen');
+                              // Timer is started inside loadUserDataFromFirestore if needed
                               console.log("App setup complete.");
                          })
                          .catch(err => {
-                              console.error("Error during post-login sequence:", err);
-                              showErrorMessage("Failed to setup app after login.", "home");
+                              console.error("Error during initialization sequence:", err);
+                              showErrorMessage("App setup failed. Please restart.", "home");
+                              // Hide loader even if setup fails after init
+                               const loader = document.getElementById('loading-indicator');
+                               if(loader) loader.classList.add('hidden');
                          });
                 } else {
                      console.error("Firebase initialization failed! App cannot run.");
                      showErrorMessage("Critical Error: Cannot connect to services.", "home");
-                     // Disable UI elements maybe
+                      const loader = document.getElementById('loading-indicator'); // Hide loader on init fail
+                      if(loader) loader.classList.add('hidden');
                 }
             } else {
                 console.error("Failed to get User ID from Telegram.");
                 showErrorMessage("Cannot verify user. Please restart.", "home");
-                // Show blocking error
+                 const loader = document.getElementById('loading-indicator'); // Hide loader if no user ID
+                 if(loader) loader.classList.add('hidden');
             }
         } else {
             console.error("Not running in TMA Environment.");
             isTmaEnvironment = false;
              document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h1>Access Error</h1><p>Please open this app inside Telegram.</p></div>';
+              const loader = document.getElementById('loading-indicator'); // Hide loader if not TMA
+              if(loader) loader.classList.add('hidden');
         }
     }
 

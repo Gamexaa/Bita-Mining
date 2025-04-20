@@ -9,28 +9,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Firebase SDKs (v8 Syntax as used in previous JS examples) -->
+    <!-- Firebase SDKs (v8 Syntax) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script> <!-- Added Functions SDK -->
-    <!-- <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script> -->
-    <!-- <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script> -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script> <!-- Optional: If calling functions from client -->
 
 </head>
 <body>
-    
-    <body>
-    <!-- === YEH WALA CODE DAALO === -->
+    <!-- Loading Indicator -->
     <div id="loading-indicator">
-        <img src="bita_logo.png" alt="Loading...">
+        <!-- Ensure 'bita_logo.png' is in the same folder as index.html -->
+        <img src="bita_logo.png" alt="Loading Bita Mining...">
     </div>
-    <!-- ============================ -->
 
+    <!-- Main App Structure -->
     <div class="app-container">
-
-        <!-- Main Content Area -->
         <main class="main-content">
-
             <!-- Home Screen -->
             <div id="home-screen" class="screen active">
                 <div class="top-section-home">
@@ -40,7 +34,6 @@
                         <div id="usd-equivalent" class="usd-value">( $000.00 )</div>
                     </div>
                 </div>
-
                 <div class="info-grid">
                     <div class="info-box">
                         <div class="info-label"><i class="fa-solid fa-users"></i> Active referral</div>
@@ -59,33 +52,27 @@
                         <div id="mining-speed" class="info-value">0.015/h</div>
                     </div>
                 </div>
-
                 <div class="mining-action">
                     <p class="mining-instruction">Start mining every 24 hours for max ß potential !</p>
                     <button id="mining-button" class="mining-button-style">Start Mining</button>
                 </div>
-                 <!-- Error Message Area -->
-                 <div id="error-message-area-home" class="error-message" style="display: none;"></div>
+                <div id="error-message-area-home" class="error-message" style="display: none;"></div>
             </div>
 
             <!-- Friends Screen -->
             <div id="friends-screen" class="screen">
                 <h2 class="screen-title">INVITE FRIENDS</h2>
                 <p class="screen-subtitle">And boost your Minning speed<br>by +0.005/h on active miner</p>
-
                 <div class="friends-total-bar">
                     <span>Total</span>
                     <span id="friends-total-count">0 users</span>
                 </div>
-
                 <div id="friend-list-container" class="friend-list">
-                    <!-- Friend items are loaded here by JS -->
+                    <!-- Friend items loaded by JS -->
                 </div>
-                 <p id="no-friends-message" class="no-friends-text" style="display: block;">Loading friends...</p> <!-- Initial message -->
-
-                <button id="copy-link-button" class="friends-copy-button">Copy link</button> <!-- Added ID here -->
-                 <!-- Error Message Area -->
-                 <div id="error-message-area-friends" class="error-message" style="display: none;"></div>
+                <p id="no-friends-message" class="no-friends-text" style="display: block;">Loading friends...</p>
+                <button id="copy-link-button" class="friends-copy-button">Copy link</button>
+                <div id="error-message-area-friends" class="error-message" style="display: none;"></div>
             </div>
 
             <!-- Boost Screen -->
@@ -93,28 +80,22 @@
                  <h2 class="screen-title">COMPLETE TASK<br>TO BOOST<br>YOUR MINING SPEED</h2>
                  <div class="task-list">
                      <div class="task-item">
-                         <!-- Using Font Awesome instead of image for icon -->
                          <div class="task-icon-boost"><i class="fa-brands fa-telegram"></i></div>
                          <div class="task-details-boost">
                              <span class="task-title">Join our channel</span>
                              <span class="task-reward">0.005/h</span>
                          </div>
-                         <!-- Container where JS adds the button or checkmark -->
                          <div id="boost-task-1-action" class="task-action-container">
                              <!-- Button/Checkmark added by JS -->
                          </div>
                      </div>
-                     <!-- Add more tasks here if needed -->
                  </div>
-                  <!-- Error Message Area -->
                   <div id="error-message-area-boost" class="error-message" style="display: none;"></div>
             </div>
-
         </main>
 
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
-            <!-- Added data-target attributes for JS -->
             <div class="nav-item" data-target="friends-screen">
                 <i class="fa-solid fa-users"></i>
                 <span>Friends</span>
@@ -130,7 +111,7 @@
         </nav>
     </div>
 
-    <!-- App Logic - Loaded Last -->
+    <!-- App Logic - Load Last -->
     <script src="app.js"></script>
 </body>
 </html>
