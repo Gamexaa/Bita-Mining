@@ -1,3 +1,5 @@
+// --- START OF FILE app.js ---
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM Loaded. Initializing App...");
 
@@ -413,31 +415,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Firebase & Data Handling ---
-     function initFirebase() {
+     function initFirebase() { // <<<--- FIREBASE INITIALIZATION FUNCTION DEFINITION ---<<<
+        // This function now contains the actual Firebase initialization code
         if (firebaseInitialized) {
-             console.log("Firebase already initialized.");
+             // console.log("Firebase already initialized."); // Optional: Less verbose log
              return true;
         }
         console.log("Initializing Firebase...");
         try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
+            // Initialize Firebase using v8 syntax (since scripts are loaded in HTML)
+            if (!firebase.apps.length) { // Check if already initialized
+                firebase.initializeApp(firebaseConfig); // Use the config defined above
                 console.log("Firebase initialized successfully.");
             } else {
-                firebase.app(); // Use existing app
-                console.log("Using existing Firebase app.");
+                firebase.app(); // Get default app if already initialized
+                console.log("Using existing Firebase app instance.");
             }
-            // Test Firestore availability
+
+            // Optional: Initialize Analytics if needed (using v8 syntax)
+            // if (typeof firebase.analytics === 'function') {
+            //     firebase.analytics();
+            //     console.log("Firebase Analytics initialized.");
+            // }
+
+            // Check if Firestore service is available
             firebase.firestore();
             console.log("Firestore service is available.");
-            firebaseInitialized = true;
-            return true;
+
+            firebaseInitialized = true; // Set the flag indicating success
+            return true; // Indicate success
+
         } catch (e) {
             console.error("Firebase initialization or Firestore check failed:", e);
-            firebaseInitialized = false; // Explicitly set flag to false
-            return false;
+            firebaseInitialized = false; // Ensure flag is false on failure
+            alert("Critical Error: Could not connect to Firebase services. Please restart the app."); // Use alert as fallback here
+            return false; // Indicate failure
         }
-    }
+    } // <<<--- END OF initFirebase FUNCTION DEFINITION ---<<<
+
 
      async function loadUserDataFromFirestore() {
         if (!currentUserId || !firebaseInitialized) {
@@ -526,7 +541,12 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // --- NEW USER ---
                 console.log("New user. Creating Firestore entry.");
-                const referredByUserId = referrerIdFromLink ? String(referrerIdFromLink) : null; // Use stored & ensure string
+
+                // <<< START DEBUGGING BLOCK >>>
+                console.log("[DEBUG] Inside NEW USER block. Checking referrerIdFromLink before use:", referrerIdFromLink);
+                const referredByUserId = referrerIdFromLink ? String(referrerIdFromLink) : null;
+                console.log("[DEBUG] Value being assigned to 'referredBy' field:", referredByUserId);
+                // <<< END DEBUGGING BLOCK >>>
 
                 const defaultData = {
                     telegramId: currentUserId,
@@ -545,8 +565,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     totalReferrals: 0,
                     activeReferrals: 0,
                     boostTask1Completed: false,
-                    referredBy: referredByUserId // Add referrer ID
+                    referredBy: referredByUserId // Use the potentially corrected value
                 };
+                 console.log("[DEBUG] Creating defaultData object:", defaultData); // Optional: Dekho poora object kaisa ban raha hai
                 await userRef.set(defaultData);
                 console.log("New user document created.");
                 await loadUserDataFromFirestore(); // Load data for the new user
@@ -639,11 +660,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tg && tg.initData) {
             console.log("TMA Environment detected.");
             isTmaEnvironment = true;
-            tg.ready();
+            tg.ready(); // Inform SDK the app UI is ready
 
-            // Get Referral ID as early as possible
+            // <<< START DEBUGGING BLOCK >>>
+            console.log("[DEBUG] Checking initData...");
+            console.log("[DEBUG] tg.initDataUnsafe:", tg.initDataUnsafe); // Poora object dekho
             referrerIdFromLink = tg.initDataUnsafe?.start_param;
-            if (referrerIdFromLink) console.log(`Referral ID from link: ${referrerIdFromLink}`);
+            console.log("[DEBUG] Read start_param value:", tg.initDataUnsafe?.start_param); // Specific value dekho
+            console.log("[DEBUG] Value assigned to referrerIdFromLink:", referrerIdFromLink); // Variable mein kya gaya?
+            // <<< END DEBUGGING BLOCK >>>
+
+             if (referrerIdFromLink) { // Original log
+                 console.log(`App launched with referral ID (start_param): ${referrerIdFromLink}`);
+             } else {
+                 console.log("App launched without referral ID.");
+             }
+
 
             tg.expand();
             tg.BackButton.onClick(() => { // Back button logic
@@ -660,7 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("User ID obtained:", currentUserId);
 
                 // Initialize Firebase (essential step)
-                if (initFirebase()) { // Checks if init was successful
+                if (initFirebase()) { // <<<--- CALLING THE INITIALIZATION FUNCTION ---<<<
                      console.log("Firebase initialized successfully.");
                      // Now proceed with user login/data loading and UI setup
                      handleFirebaseLoginUsingTMA(currentUserData) // This now also loads data
@@ -696,3 +728,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
 
 }); // End DOMContentLoaded
+
+// --- END OF FILE app.js ---
