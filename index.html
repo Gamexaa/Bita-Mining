@@ -6,13 +6,13 @@
     <title>Bita Mining</title>
     <link rel="stylesheet" href="style.css">
     <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Firebase SDKs (v8 Syntax) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script> <!-- Optional: If calling functions from client -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script> <!-- Optional for callable functions -->
 
 </head>
 <body>
@@ -23,20 +23,16 @@
 
     <!-- Main App Container -->
     <div class="app-container">
-        <!-- Content that scrolls -->
         <main class="main-content">
-
             <!-- Home Screen -->
             <div id="home-screen" class="screen active">
-                <!-- Top Gradient Section -->
-                <div class="top-gradient-section">
+                <div class="top-section-home">
                     <div class="balance-circle">
                         <div class="balance-logo">$ß</div>
-                        <div id="balance" class="balance-value">0000.0000</div>
-                        <div id="usd-equivalent" class="usd-value">( $000.00 )</div>
+                        <div id="balance" class="balance-value">0.000000</div>
+                        <div id="usd-equivalent" class="usd-value">( $0.00 )</div>
                     </div>
                 </div>
-                <!-- Info Grid -->
                 <div class="info-grid">
                     <div class="info-box">
                         <div class="info-label"><i class="fa-solid fa-users"></i> Active referral</div>
@@ -55,30 +51,33 @@
                         <div id="mining-speed" class="info-value">0.015/h</div>
                     </div>
                 </div>
-                <!-- Mining Action -->
                 <div class="mining-action">
                     <p class="mining-instruction">Start mining every 24 hours for max ß potential !</p>
                     <button id="mining-button" class="mining-button-style">Start Mining</button>
                 </div>
-                 <!-- Error Message Area -->
-                 <div id="error-message-area-home" class="error-message" style="display: none;"></div>
+                <div id="error-message-area-home" class="error-message" style="display: none;"></div>
             </div>
 
             <!-- Friends Screen -->
             <div id="friends-screen" class="screen">
-                <h2 class="screen-title">INVITE FRIENDS</h2>
-                <p class="screen-subtitle">And boost your Minning speed<br>by +0.005/h on active miner</p>
-                <div class="friends-total-bar">
-                    <span>Total</span>
-                    <span id="friends-total-count">0 users</span>
+                <!-- Content fills space, pushing button down -->
+                <div class="friends-content-area">
+                    <h2 class="screen-title">INVITE FRIENDS</h2>
+                    <p class="screen-subtitle">And boost your Minning speed<br>by +0.005/h on active miner</p>
+                    <div class="friends-total-bar">
+                        <span>Total</span>
+                        <span id="friends-total-count">0 users</span>
+                    </div>
+                    <div id="friend-list-container" class="friend-list">
+                        <!-- Friend items loaded by JS -->
+                    </div>
+                    <p id="no-friends-message" class="no-friends-text" style="display: none;">No friends...</p> <!-- Changed text -->
+                    <div id="error-message-area-friends" class="error-message" style="display: none;"></div>
                 </div>
-                <div id="friend-list-container" class="friend-list">
-                    <!-- Friend items loaded by JS -->
-                </div>
-                <p id="no-friends-message" class="no-friends-text" style="display: block;">Loading friends...</p>
-                 <!-- Error Message Area -->
-                 <div id="error-message-area-friends" class="error-message" style="display: none;"></div>
-                 <!-- Copy button is placed outside the main scrollable content in the CSS using position fixed/absolute -->
+                 <!-- Copy button positioned at the bottom -->
+                 <div class="friends-copy-button-container">
+                    <button id="copy-link-button" class="friends-copy-button">Copy link</button>
+                 </div>
             </div>
 
             <!-- Boost Screen -->
@@ -91,20 +90,14 @@
                              <span class="task-title">Join our channel</span>
                              <span class="task-reward">0.005/h</span>
                          </div>
-                         <div id="boost-task-1-action" class="task-action-container">
-                             <!-- Button/Checkmark added by JS -->
-                         </div>
+                         <div id="boost-task-1-action" class="task-action-container"></div>
                      </div>
                  </div>
                   <div id="error-message-area-boost" class="error-message" style="display: none;"></div>
             </div>
+        </main>
 
-        </main> <!-- End main-content -->
-
-        <!-- Fixed Copy Button for Friends Screen (Positioned with CSS) -->
-        <button id="copy-link-button" class="friends-copy-button" style="display: none;">Copy link</button>
-
-        <!-- Fixed Bottom Navigation -->
+        <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <div class="nav-item" data-target="friends-screen">
                 <i class="fa-solid fa-users"></i>
@@ -119,9 +112,8 @@
                 <span>Boost</span>
             </div>
         </nav>
-    </div> <!-- End app-container -->
+    </div>
 
-    <!-- App Logic - Load Last -->
     <script src="app.js"></script>
 </body>
 </html>

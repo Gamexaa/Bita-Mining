@@ -8,16 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentUserId = null;
     let isTmaEnvironment = false;
     const tg = window.Telegram?.WebApp;
-    let referrerIdFromLink = null; // Will hold the ID from ?start= parameter
+    let referrerIdFromLink = null;
 
-    // --- DOM Elements Cache ---
-    const loadingIndicator = document.getElementById('loading-indicator');
-    const appContainer = document.querySelector('.app-container'); // Main container
+    // --- DOM Elements ---
     const screens = document.querySelectorAll('.screen');
     const navItems = document.querySelectorAll('.nav-item');
-    const copyLinkButton = document.getElementById('copy-link-button'); // Button for friends screen
-
-    // Home Screen Elements
     const balanceEl = document.getElementById('balance');
     const usdEquivalentEl = document.getElementById('usd-equivalent');
     const activeReferralsEl = document.getElementById('active-referrals');
@@ -25,31 +20,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const miningTimerEl = document.getElementById('mining-timer');
     const miningSpeedEl = document.getElementById('mining-speed');
     const miningButton = document.getElementById('mining-button');
-    const homeErrorMessageArea = document.getElementById('error-message-area-home');
-
-    // Friends Screen Elements
     const friendsTotalCountEl = document.getElementById('friends-total-count');
     const friendListContainer = document.getElementById('friend-list-container');
     const noFriendsMessage = document.getElementById('no-friends-message');
-    const friendsErrorMessageArea = document.getElementById('error-message-area-friends');
-
-    // Boost Screen Elements
+    const copyLinkButton = document.getElementById('copy-link-button');
     const boostTaskActionContainer = document.getElementById('boost-task-1-action');
+    const homeErrorMessageArea = document.getElementById('error-message-area-home');
+    const friendsErrorMessageArea = document.getElementById('error-message-area-friends');
     const boostErrorMessageArea = document.getElementById('error-message-area-boost');
+    const loadingIndicator = document.getElementById('loading-indicator'); // Cache loader
 
     // --- State Variables ---
-    let balance = 0.0000;
+    let balance = 0.000000; // 6 decimal places
     let isMining = false;
     let miningInterval = null;
     let timerInterval = null;
     let miningEndTime = 0;
-    const MINING_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+    const MINING_DURATION_MS = 24 * 60 * 60 * 1000;
     let baseMiningSpeed = 0.015;
     let boostSpeed = 0;
-    let referralSpeed = 0; // Updated by backend based on active referrals
-    let totalReferrals = 0; // Updated by backend Cloud Function
-    let activeReferrals = 0; // Needs logic based on friend activity
-    let friends = []; // Populated by fetching data
+    let referralSpeed = 0;
+    let totalReferrals = 0;
+    let activeReferrals = 0;
+    let friends = []; // Friend data will be fetched later
     let boostTask1Completed = false;
     let lastBalanceUpdateTime = 0;
     let firebaseInitialized = false;
@@ -65,13 +58,13 @@ document.addEventListener('DOMContentLoaded', () => {
       measurementId: "G-DBRTWRWSEM"
     };
 
-    // --- Helper Functions ---
-    function formatBalance(num) { return (typeof num === 'number' ? num.toFixed(4) : '0.0000'); }
+    // --- Core Functions ---
+    function formatBalance(num) { return (typeof num === 'number' ? num.toFixed(6) : '0.000000'); } // 6 decimals
     function calculateUsdEquivalent(betaBalance) { const rate = 4.00; return (typeof betaBalance === 'number' ? (betaBalance * rate).toFixed(2) : '0.00'); }
     function calculateTotalSpeed() { return (baseMiningSpeed || 0) + (boostSpeed || 0) + (referralSpeed || 0); }
     function formatTime(ms) {
         if (ms <= 0) return "00:00:00";
-        let totalSeconds = Math.floor(ms / 1000);
+        let totalSeconds = Math.max(0, Math.floor(ms / 1000)); // Ensure non-negative
         let hours = Math.floor(totalSeconds / 3600);
         let minutes = Math.floor((totalSeconds % 3600) / 60);
         let seconds = totalSeconds % 60;
@@ -81,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- UI Update Functions ---
     function updateDisplay() {
         if (!firebaseInitialized || !currentUserId) return;
+
         requestAnimationFrame(() => {
             const totalSpeed = calculateTotalSpeed();
             if (balanceEl) balanceEl.textContent = formatBalance(balance);
@@ -93,44 +87,78 @@ document.addEventListener('DOMContentLoaded', () => {
                 miningButton.disabled = isMining;
             }
             if (friendsTotalCountEl) friendsTotalCountEl.textContent = `${totalReferrals} users`;
-            renderFriendList();
+            renderFriendList(); // Update friend list UI
         });
     }
 
     function startTimer() {
         if (timerInterval) clearInterval(timerInterval);
-        updateTimer(); // Immediate update
+        updateTimer(); // Update immediately
         timerInterval = setInterval(updateTimer, 1000);
     }
 
     function updateTimer() {
         const now = Date.now();
-        const timeLeft = miningEndTime > 0 ? Math.max(0, miningEndTime - now) : 0; // Ensure non-negative
+        const timeLeft = miningEndTime > 0 ? miningEndTime - now : 0;
         if (miningTimerEl) miningTimerEl.textContent = formatTime(timeLeft);
         if (timeLeft <= 0 && isMining) {
-            console.log("Timer ended. Stopping mining.");
-            stopMining(true); // Auto-stop and save
+            console.log("Timer ended, stopping mining session.");
+            stopMining(true); // Save balance
         }
     }
 
     function renderFriendList() {
         if (!friendListContainer || !noFriendsMessage) return;
         friendListContainer.innerHTML = ''; // Clear
-        // TODO: Fetch friends data from Firestore where 'referredBy' == currentUserId
-        const friendsToDisplay = friends; // Using placeholder for now
+
+        // TODO: Fetch actual friend data here using Firestore query
+        const friendsToDisplay = friends; // Using state variable for now
+
         if (!friendsToDisplay || friendsToDisplay.length === 0) {
+            noFriendsMessage.textContent = "No friends..."; // Set text here
             noFriendsMessage.style.display = 'block';
             friendListContainer.style.display = 'none';
         } else {
             noFriendsMessage.style.display = 'none';
             friendListContainer.style.display = 'block';
-            friendsToDisplay.forEach(friend => { /* ... (friend item creation logic from previous CSS) ... */ });
+            friendsToDisplay.forEach(friend => {
+                const friendEl = document.createElement('div');
+                friendEl.className = 'friend-item';
+                const avatarHTML = friend.photoUrl ? `<img src="${friend.photoUrl}" alt="P" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-user\\'></i>'; this.remove();">` : '<i class="fas fa-user"></i>';
+                let joinedText = 'N/A';
+                 if (friend.joined?.toDate) { // Check if it's a Firestore Timestamp
+                    const joinDate = friend.joined.toDate();
+                    joinedText = `${joinDate.toLocaleString('en-US', { month: 'long', day: 'numeric' })} at ${String(joinDate.getHours()).padStart(2, '0')}:${String(joinDate.getMinutes()).padStart(2, '0')}`;
+                } else if (typeof friend.joined === 'number') { // Handle potential number timestamp
+                     const joinDate = new Date(friend.joined);
+                     joinedText = `${joinDate.toLocaleString('en-US', { month: 'long', day: 'numeric' })} at ${String(joinDate.getHours()).padStart(2, '0')}:${String(joinDate.getMinutes()).padStart(2, '0')}`;
+                 }
+
+                const boostGiven = (friend.boostGiven || 0.005).toFixed(3);
+                friendEl.innerHTML = `
+                    <div class="friend-info">
+                        <div class="friend-avatar">${avatarHTML}</div>
+                        <div class="friend-details">
+                            <span class="friend-name">${friend.name || `User...${friend.id?.slice(-4)}`}</span>
+                            <span class="friend-joined">${joinedText}</span>
+                        </div>
+                    </div>
+                    <div class="friend-status">
+                        <span class="friend-boost" style="visibility: ${friend.active ? 'visible' : 'hidden'};">+${boostGiven}/h</span>
+                        <span class="friend-activity ${friend.active ? 'active' : 'inactive'}">
+                            ${friend.active ? 'Active' : 'Not active !'}
+                        </span>
+                    </div>
+                `;
+                friendListContainer.appendChild(friendEl);
+            });
         }
     }
 
-    function updateBoostTaskUI() {
+     function updateBoostTaskUI() {
         if (!boostTaskActionContainer) return;
         boostTaskActionContainer.innerHTML = ''; // Clear previous
+
         if (boostTask1Completed) {
             const checkMark = document.createElement('span');
             checkMark.className = 'task-complete-check';
@@ -139,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             const button = document.createElement('button');
             button.id = 'boost-task-1';
-            button.className = 'task-button boost-start'; // Default to Start
+            button.className = 'task-button boost-start';
             button.textContent = "Start";
             button.removeEventListener('click', handleBoostTaskClick); // Ensure no duplicates
             button.addEventListener('click', handleBoostTaskClick);
@@ -157,19 +185,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (!foundScreen) {
-            console.warn(`Target screen "${targetId}" not found! Defaulting to home.`);
-            document.getElementById('home-screen')?.classList.add('active');
-            targetId = 'home-screen';
+            console.warn(`Screen "${targetId}" not found! Defaulting home.`);
+            screens[0]?.classList.add('active'); // Fallback to first screen (home)
+            targetId = screens[0]?.id || 'home-screen';
         }
 
         navItems.forEach(item => {
             item.classList.toggle('active', item.dataset.target === targetId);
         });
-
-        // Toggle visibility of the fixed copy button based on screen
-        if (copyLinkButton) {
-            copyLinkButton.style.display = (targetId === 'friends-screen') ? 'block' : 'none';
-        }
 
         if (targetId === 'home-screen') {
             tg?.BackButton.hide();
@@ -179,37 +202,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function showErrorMessage(message, screenId = 'home', isNonBlocking = false) {
+     function showErrorMessage(message, screenId = 'home') {
         console.error("UI Error:", message);
         let errorDiv;
-        // Find the error area for the currently active screen or default to home
-        const activeScreen = document.querySelector('.screen.active');
-        if (activeScreen) {
-            errorDiv = activeScreen.querySelector('.error-message');
+        switch(screenId) {
+            case 'friends': errorDiv = friendsErrorMessageArea; break;
+            case 'boost': errorDiv = boostErrorMessageArea; break;
+            case 'home': default: errorDiv = homeErrorMessageArea; break;
         }
-        errorDiv = errorDiv || homeErrorMessageArea; // Fallback to home error area
-
         if (errorDiv) {
           errorDiv.textContent = message;
           errorDiv.style.display = 'block';
-          if (!isNonBlocking) { // Hide automatically only if non-blocking
-             setTimeout(() => { if(errorDiv) errorDiv.style.display = 'none'; }, 5000);
-          }
-        } else {
-            alert(message); // Ultimate fallback
-        }
+          setTimeout(() => { if(errorDiv) errorDiv.style.display = 'none'; }, 5000);
+        } else { alert(message); }
     }
 
-    // --- Core Logic: Mining, Balance ---
+
+    // --- Core Logic ---
     function startBalanceIncrement() {
         if (miningInterval) clearInterval(miningInterval);
         if (!isMining || !currentUserId) return;
+
         console.log("Starting balance increment...");
         const incrementPerSecond = calculateTotalSpeed() / 3600;
+
         miningInterval = setInterval(() => {
             if (!isMining) { clearInterval(miningInterval); miningInterval = null; return; }
             balance += incrementPerSecond;
-            updateDisplay(); // Update UI frequently
+            updateDisplay(); // Update UI every second
+
             const now = Date.now();
             if (now - lastBalanceUpdateTime >= 60000) { // Save approx every 60s
                 saveBalanceToFirebase();
@@ -221,20 +242,23 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveBalanceToFirebase() {
         if (!currentUserId || !firebaseInitialized || typeof balance !== 'number') return;
         const db = firebase.firestore();
-        const roundedBalance = parseFloat(balance.toFixed(4));
+        const roundedBalance = parseFloat(balance.toFixed(6)); // Save 6 decimals
         console.log(`Saving balance ${roundedBalance} to Firebase...`);
         db.collection('users').doc(currentUserId).update({ balance: roundedBalance })
-            .then(() => console.log(`Balance updated.`))
+            .then(() => console.log(`Balance (${roundedBalance}) updated.`))
             .catch(error => console.error("Error updating balance:", error));
     }
 
-    function startMining() {
-        if (isMining || !currentUserId || !firebaseInitialized) { console.warn("Start mining prevented."); return; }
+     function startMining() {
+        if (isMining || !currentUserId || !firebaseInitialized) {
+            console.warn("Start mining prevented."); return;
+        }
         const db = firebase.firestore();
         console.log("Attempting to start mining...");
         const newMiningEndTime = Date.now() + MINING_DURATION_MS;
+
         miningButton.disabled = true; // Disable button immediately
-        miningButton.textContent = 'Starting...';
+        miningButton.textContent = "Starting...";
 
         db.collection('users').doc(currentUserId).update({
             miningEndTime: firebase.firestore.Timestamp.fromMillis(newMiningEndTime)
@@ -242,68 +266,71 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Mining session started in Firestore.");
             isMining = true;
             miningEndTime = newMiningEndTime;
-            lastBalanceUpdateTime = Date.now(); // Reset save timer
-            updateDisplay(); // Update button text to 'Mining...'
+            lastBalanceUpdateTime = Date.now();
+            updateDisplay(); // Update UI (button text etc.)
             startTimer();
             startBalanceIncrement();
         }).catch(error => {
-            console.error("Error starting mining in Firestore:", error);
+            console.error("Error starting mining session:", error);
             showErrorMessage("Mining start failed. Try again.", "home");
             isMining = false; // Rollback state
-             miningEndTime = 0;
-            updateDisplay(); // Reset button text/state
+            miningEndTime = 0;
+            if (miningButton) { // Re-enable button
+                miningButton.textContent = 'Start Mining';
+                miningButton.disabled = false;
+            }
         });
     }
 
-    function stopMining(saveFinalBalance = true) {
-        console.log("Stopping mining. Save:", saveFinalBalance);
+     function stopMining(saveFinalBalance = true) {
+        console.log("Attempting to stop mining. Save:", saveFinalBalance);
         if (miningInterval) clearInterval(miningInterval);
         if (timerInterval) clearInterval(timerInterval);
-        miningInterval = null;
-        timerInterval = null;
+        miningInterval = null; timerInterval = null;
+
         const wasMining = isMining;
         isMining = false;
-        const finalBalanceToSave = parseFloat(balance.toFixed(4));
+        const finalBalanceToSave = parseFloat(balance.toFixed(6)); // 6 decimals
         miningEndTime = 0;
-        updateDisplay(); // Update UI (button text, etc.)
+
+        updateDisplay(); // Update UI immediately
         if (miningTimerEl) miningTimerEl.textContent = "00:00:00";
 
         if (currentUserId && firebaseInitialized && wasMining) {
             const db = firebase.firestore();
             const updateData = { miningEndTime: null };
-            if (saveFinalBalance) {
-                updateData.balance = finalBalanceToSave;
-                console.log(`Saving final balance ${finalBalanceToSave}`);
-            }
+            if (saveFinalBalance) updateData.balance = finalBalanceToSave;
+            console.log("Updating Firestore on stop:", updateData);
             db.collection('users').doc(currentUserId).update(updateData)
-                .then(() => console.log("Mining session stopped in Firestore."))
-                .catch(error => console.error("Error stopping mining in Firestore:", error));
+                .then(() => console.log("Firestore updated on stop."))
+                .catch(error => console.error("Error updating Firestore on stop:", error));
         }
     }
 
-    // --- Boost Task Logic ---
-    function handleBoostTaskClick() {
+    // --- Boost Task Handler ---
+     function handleBoostTaskClick() {
         if (!currentUserId || !firebaseInitialized) return;
         const db = firebase.firestore();
         const boostButton = boostTaskActionContainer?.querySelector('#boost-task-1');
         if (!boostButton || boostButton.disabled || boostTask1Completed) return;
+
         const currentButtonState = boostButton.textContent;
 
         if (currentButtonState === "Start") {
             console.log("Boost Task: Start");
-            if (tg?.openTelegramLink) {
-                 tg.openTelegramLink("https://t.me/Bita_Community"); // <<<--- UPDATE YOUR LINK
+            if (tg && tg.openTelegramLink) {
+                 tg.openTelegramLink("https://t.me/Bita_Community"); // <<<--- UPDATE LINK IF NEEDED
                  boostButton.textContent = "Claim";
-                 boostButton.className = 'task-button boost-claim';
+                 boostButton.classList.replace("boost-start", "boost-claim");
             } else { showErrorMessage("Telegram action not available.", "boost"); }
         } else if (currentButtonState === "Claim") {
             console.log("Boost Task: Claim");
             boostButton.textContent = "Claiming...";
             boostButton.disabled = true;
-            boostButton.className = 'task-button boost-claiming'; // Use specific class
+            boostButton.classList.add("boost-claiming");
 
-            // !!! Server-side validation recommended !!!
             const newBoostSpeed = (boostSpeed || 0) + 0.005;
+
             db.collection('users').doc(currentUserId).update({
                 boostTask1Completed: true,
                 boostSpeed: newBoostSpeed
@@ -313,54 +340,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateBoostTaskUI(); updateDisplay();
             }).catch(error => {
                 console.error("Error claiming boost:", error);
-                showErrorMessage("Boost claim failed.", "boost");
-                // Reset button carefully
-                 updateBoostTaskUI(); // Re-render UI based on state (will show Start/Claim again)
-                 const btn = boostTaskActionContainer?.querySelector('#boost-task-1');
-                 if(btn) {
-                    btn.disabled = false; // Re-enable
-                    btn.textContent = "Claim"; // Ensure it says Claim if not completed
-                    btn.className = 'task-button boost-claim';
-                 }
+                showErrorMessage("Boost claim failed. Try again.", "boost");
+                if(boostButton){ // Re-enable button if still exists
+                    boostButton.textContent = "Claim";
+                    boostButton.disabled = false;
+                    boostButton.classList.remove("boost-claiming");
+                    boostButton.classList.add("boost-claim");
+                }
             });
         }
     }
 
-    // --- Firebase Initialization ---
-    function initFirebase() {
+    // --- Firebase & Data ---
+     function initFirebase() {
         if (firebaseInitialized) return true;
         console.log("Initializing Firebase...");
         try {
             if (!firebase.apps.length) {
                 firebase.initializeApp(firebaseConfig);
-                console.log("Firebase initialized successfully.");
-            } else {
-                firebase.app(); console.log("Using existing Firebase app instance.");
-            }
-            firebase.firestore(); // Check Firestore
-            console.log("Firestore service is available.");
-            firebaseInitialized = true; return true;
+            } else { firebase.app(); }
+            firebase.firestore(); // Check availability
+            console.log("Firebase initialized successfully.");
+            firebaseInitialized = true;
+            return true;
         } catch (e) {
             console.error("Firebase initialization failed:", e);
             firebaseInitialized = false;
-            alert("Critical Error: Could not connect to services."); return false;
+            alert("Critical Error: Could not connect to services."); // Blocking alert
+            return false;
         }
     }
 
-    // --- Data Loading ---
-    async function loadUserDataFromFirestore() {
-        const loader = document.getElementById('loading-indicator');
-        console.log("[LOAD_DATA] Function started. Loader found:", !!loader);
+     async function loadUserDataFromFirestore() { // Final refined version
+        console.log("[LOAD_DATA] Function started.");
         if (!currentUserId || !firebaseInitialized) {
-            console.error("[LOAD_DATA] Cannot load: No user ID or Firebase init failed.");
-            showErrorMessage("Failed to load user data. Restart app.", "home");
-            if (loader) { console.log("[LOAD_DATA] Hiding loader (early exit)."); loader.classList.add('hidden'); }
-            return;
+            console.error("[LOAD_DATA] Cannot load: User ID or Firebase missing.");
+            showErrorMessage("Failed to load data. Please restart.", "home");
+            return; // Exit
         }
-        console.log("[LOAD_DATA] Attempting DB connection...");
+        console.log("[LOAD_DATA] Attempting DB connection for user:", currentUserId);
         const db = firebase.firestore();
         const userRef = db.collection('users').doc(currentUserId);
-        console.log(`[LOAD_DATA] Attempting to get userRef: users/${currentUserId}`);
+        let success = false; // Flag to track if data processing was successful
 
         try {
             console.log("[LOAD_DATA] BEFORE userRef.get()");
@@ -369,7 +390,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (doc.exists) {
                 const userData = doc.data();
-                console.log("[LOAD_DATA] SUCCESS: User doc exists. Processing data...");
+                console.log("[LOAD_DATA] SUCCESS: Processing data...");
+                // Update state
                 balance = userData.balance ?? 0;
                 miningEndTime = userData.miningEndTime?.toMillis() ?? 0;
                 baseMiningSpeed = userData.baseMiningSpeed ?? 0.015;
@@ -378,35 +400,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalReferrals = userData.totalReferrals ?? 0;
                 activeReferrals = userData.activeReferrals ?? 0;
                 boostTask1Completed = userData.boostTask1Completed ?? false;
-                // friends = await fetchFriends(); // Placeholder
+                // friends = await fetchFriends(); // TODO: Fetch friends
 
+                // Check mining status
                 const now = Date.now();
                 isMining = (miningEndTime > now);
                 console.log("[LOAD_DATA] State updated. Mining:", isMining);
 
+                // Update UI
                 updateBoostTaskUI(); updateDisplay(); startTimer();
-                console.log("[LOAD_DATA] Initial UI updated.");
+                console.log("[LOAD_DATA] UI updated successfully.");
+                success = true; // Mark as success
             } else {
-                // User document doesn't exist - this case is now handled by handleFirebaseLoginUsingTMA
-                // We shouldn't reach here if handleFirebaseLoginUsingTMA ran correctly.
-                // If we DO reach here, it means the user was created but fetching failed immediately after.
-                console.warn(`[LOAD_DATA] User document ${currentUserId} not found during data load, despite potentially being created.`);
-                showErrorMessage("Error loading initial data. Try restarting.", "home");
+                console.error(`[LOAD_DATA] User doc ${currentUserId} NOT FOUND!`);
+                showErrorMessage("User data not found. Restart app.", "home");
             }
         } catch (error) {
-            console.error("[LOAD_DATA] CATCH ERROR loading user data:", error);
-            if (error.code === 'permission-denied') { showErrorMessage("Data access error.", "home"); }
-            else { showErrorMessage("Failed to load data.", "home"); }
+            console.error("[LOAD_DATA] CATCH ERROR loading data:", error);
+            showErrorMessage(`Load failed: ${error.code || error.message}`, "home");
         } finally {
-            if (loader) { console.log("[LOAD_DATA] FINALLY: Hiding loader."); loader.classList.add('hidden'); }
-            else { console.warn("[LOAD_DATA] FINALLY: Loader not found!"); }
-            console.log("[LOAD_DATA] Function finished.");
+            // ALWAYS hide loader, regardless of success or error
+            if (loadingIndicator) {
+                console.log("[LOAD_DATA] FINALLY: Hiding loader.");
+                loadingIndicator.classList.add('hidden');
+            } else { console.warn("[LOAD_DATA] Loader not found in finally block."); }
+            console.log("[LOAD_DATA] Function finished. Success:", success);
         }
-    }
+     } // End loadUserDataFromFirestore
 
     // --- User Login/Registration ---
     async function handleFirebaseLoginUsingTMA(tmaUserData) {
-        if (!currentUserId || !firebaseInitialized) { console.error("Login check failed."); return Promise.reject("Prerequisites failed"); }
+        if (!currentUserId || !firebaseInitialized) return Promise.reject("Prerequisites failed"); // Return a rejected promise
         console.log("Handling Firebase login/registration...");
         const db = firebase.firestore();
         const userRef = db.collection('users').doc(currentUserId);
@@ -414,31 +438,23 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const doc = await userRef.get();
             if (doc.exists) {
-                console.log("Existing user found.");
-                const updatePayload = {
-                    lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-                    firstName: tmaUserData.first_name || doc.data().firstName || null,
-                    username: tmaUserData.username || doc.data().username || null,
-                    photoUrl: tmaUserData.photo_url || doc.data().photoUrl || null,
-                    isPremium: tmaUserData.is_premium ?? false,
-                    languageCode: tmaUserData.language_code || 'en',
+                console.log("User exists. Updating...");
+                const updatePayload = { /* ... payload from previous version ... */
+                     lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                     firstName: tmaUserData.first_name || doc.data().firstName || null,
+                     username: tmaUserData.username || doc.data().username || null,
+                     photoUrl: tmaUserData.photo_url || doc.data().photoUrl || null,
+                     isPremium: tmaUserData.is_premium ?? false,
+                     languageCode: tmaUserData.language_code || 'en',
                 };
-                // Avoid overwriting referredBy if it already exists (though it shouldn't change)
-                if (doc.data().referredBy !== undefined) {
-                    console.log("Keeping existing referredBy value.");
-                }
                 await userRef.update(updatePayload);
                 console.log("Existing user updated.");
             } else {
-                console.log("New user detected.");
-                // --- MODIFICATION START ---
-                // REMOVED: Re-checking start_param logic.
-                // const currentStartParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
-                // console.log("[DEBUG] Re-checking start_param before creating user:", currentStartParam);
-                // const referredByUserId = currentStartParam ? String(currentStartParam) : null; // Use re-checked value
-                // console.log("[DEBUG] Final referredBy value for new user:", referredByUserId);
-
-                const defaultData = {
+                console.log("New user. Creating...");
+                console.log("[DEBUG] NEW_USER: referrerIdFromLink:", referrerIdFromLink); // Log ID just before use
+                const referredByUserId = referrerIdFromLink ? String(referrerIdFromLink) : null;
+                console.log("[DEBUG] NEW_USER: referredBy field value:", referredByUserId);
+                const defaultData = { /* ... payload from previous version ... */
                     telegramId: currentUserId,
                     firstName: tmaUserData.first_name || null,
                     username: tmaUserData.username || null,
@@ -447,7 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     languageCode: tmaUserData.language_code || 'en',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-                    balance: 0.0000,
+                    balance: 0.000000, // 6 decimals
                     miningEndTime: null,
                     baseMiningSpeed: 0.015,
                     boostSpeed: 0,
@@ -455,167 +471,108 @@ document.addEventListener('DOMContentLoaded', () => {
                     totalReferrals: 0,
                     activeReferrals: 0,
                     boostTask1Completed: false,
-                    // Use the referrerIdFromLink captured during initializeApp
-                    referredBy: referrerIdFromLink ? String(referrerIdFromLink) : null
+                    referredBy: referredByUserId // Save referrer ID
                 };
-
-                // Log the data right before sending to Firestore
-                console.log("[DEBUG] Data being set for new user:", JSON.stringify(defaultData));
-
                 await userRef.set(defaultData);
-                console.log("New user document created.");
-              
-                // === Referral count update (FREE version) ===
-    if (referrerIdFromLink) {
-        const referrerRef = db.collection('users').doc(referrerIdFromLink);
-        referrerRef.update({
-            totalReferrals: firebase.firestore.FieldValue.increment(1),
-            referralSpeed: firebase.firestore.FieldValue.increment(0.005)
-        }).then(() => {
-            console.log("Referrer's referral count and speed updated (client-side).");
-        }).catch((err) => {
-            console.error("Failed to update referrer (client-side):", err);
-        });
-    }
-              
-              // Use referrerIdFromLink here too for the log message
-                if (referrerIdFromLink) {
-                    console.log(`User ${currentUserId} referred by ${referrerIdFromLink}. Cloud function should trigger.`);
-                    // console.warn("REMINDER: Deploy Cloud Function to update referrer's count!"); // We assume it's deployed
+                console.log("New user created.");
+                if (referredByUserId) {
+                    console.log(`User ${currentUserId} referred by ${referredByUserId}.`);
+                    console.warn("REMINDER: Deploy Cloud Function to update referrer's count!");
+                    // Trigger function logic if needed
                 }
-                // --- MODIFICATION END ---
             }
-            // Indicate success (important for initializeApp's .then())
-            return Promise.resolve();
+            return Promise.resolve(); // Indicate success
         } catch (error) {
             console.error("Error during Firebase login/registration:", error);
-            showErrorMessage("Login failed. Please restart.", "home");
-            return Promise.reject(error); // Propagate error
+            showErrorMessage("Login process failed.", "home");
+            return Promise.reject(error); // Indicate failure
         }
     }
 
-    // --- Event Listeners Setup ---
+    // --- Event Listeners ---
     function setupEventListeners() {
         console.log("Setting up event listeners...");
-        navItems.forEach(item => { // Use named function for clarity and removal
-            item.removeEventListener('click', handleNavClick);
-            item.addEventListener('click', handleNavClick);
-        });
-        if (miningButton) {
-            miningButton.removeEventListener('click', handleMiningClick);
-            miningButton.addEventListener('click', handleMiningClick);
-        }
-        if (copyLinkButton) {
-            copyLinkButton.removeEventListener('click', handleCopyLinkClick);
-            copyLinkButton.addEventListener('click', handleCopyLinkClick);
-        }
-        // Boost button listener is added/removed in updateBoostTaskUI
-        console.log("Event listeners attached.");
+        navItems.forEach(item => { item.removeEventListener('click', handleNavClick); item.addEventListener('click', handleNavClick); });
+        if (miningButton) { miningButton.removeEventListener('click', handleMiningClick); miningButton.addEventListener('click', handleMiningClick); }
+        if (copyLinkButton) { copyLinkButton.removeEventListener('click', handleCopyLinkClick); copyLinkButton.addEventListener('click', handleCopyLinkClick); }
+        // Boost button listener is managed by updateBoostTaskUI
+        console.log("Event listeners setup complete.");
     }
 
     // --- Event Handlers ---
     function handleNavClick(event) { const targetId = event.currentTarget.dataset.target; if (targetId) switchScreen(targetId); }
     function handleMiningClick() { if (!isMining) startMining(); else tg?.showPopup({ message: 'Mining session already active!' }); }
-    function handleCopyLinkClick() {
-        if (!currentUserId || !isTmaEnvironment) { showErrorMessage("Cannot create link.", "friends"); return; }
-        const miniAppShortName = 'Play'; // <<< CONFIRM THIS IS YOUR MINI APP SHORT NAME/URL PATH
-        const botUsername = "BitaMiningbot"; // <<< CONFIRM YOUR BOT USERNAME
-        const linkToCopy = `https://t.me/${botUsername}/${miniAppShortName}?start=${currentUserId}`;
-        console.log("Copying link:", linkToCopy);
-        if (tg?.clipboardWriteText) {
-            tg.clipboardWriteText(linkToCopy, (ok) => {
-                 if (ok) {
-                     tg.showPopup({ message: 'Referral link copied!' });
-                 } else {
-                     console.warn("TMA clipboard write failed. Using fallback.");
-                     copyFallback(linkToCopy);
-                 }
-            });
-        } else {
-            console.warn("TMA clipboard API not available. Using fallback.");
-            copyFallback(linkToCopy);
-        }
-    }
-    function copyFallback(text) {
-        navigator.clipboard.writeText(text).then(() => {
-            // Avoid double alert if TMA popup exists
-            if (!tg?.showPopup) alert('Referral link copied!');
-            else tg?.showPopup({ message: 'Link copied!' }); // Show TMA popup if available
-        }).catch(err => {
-            console.error("Fallback clipboard copy failed:", err);
-            showErrorMessage('Could not copy link.', 'friends');
-        });
-    }
+     function handleCopyLinkClick() {
+         if (!currentUserId || !isTmaEnvironment) { showErrorMessage("Cannot create link.", "friends"); return; }
+         const miniAppShortName = 'Play'; const botUsername = "BitaMiningbot";
+         const linkToCopy = `https://t.me/${botUsername}/${miniAppShortName}?start=${currentUserId}`;
+         console.log("Copying link:", linkToCopy);
+         if (tg && tg.clipboardWriteText) { tg.clipboardWriteText(linkToCopy, (ok) => ok ? tg.showPopup({ message: 'Referral link copied!' }) : copyFallback(linkToCopy)); }
+         else { copyFallback(linkToCopy); }
+     }
+     function copyFallback(text) { navigator.clipboard.writeText(text).then(() => { tg?.showPopup({ message: 'Link copied!' }); alert('Link copied!');}).catch(err => showErrorMessage('Could not copy link.', 'friends')); }
+
 
     // --- Application Initialization ---
-    function initializeApp() {
-        console.log("initializeApp called...");
-        const loader = document.getElementById('loading-indicator'); // Get loader early
+    async function initializeApp() {
+        console.log("initializeApp starting...");
+        if (tg && tg.initData) {
+            isTmaEnvironment = true; tg.ready();
+            console.log("TMA Env detected. SDK Ready.");
 
-        // Hide loader function to be called in error paths or finally
-        const hideLoader = () => {
-            if (loader && !loader.classList.contains('hidden')) {
-                 console.log("Hiding loader.");
-                 loader.classList.add('hidden');
-            }
-        };
+            // Get Referral ID early
+            referrerIdFromLink = tg.initDataUnsafe?.start_param;
+            console.log(`[DEBUG] Start Param Read: ${referrerIdFromLink || 'None'}`);
+            // --- Optional: Display ID on screen for testing ---
+            try {
+                 const display = document.createElement('div');
+                 display.id = 'ref-debug';
+                 display.textContent = `Ref: ${referrerIdFromLink || 'N/A'}`;
+                 display.style.cssText = 'position:fixed;top:0;left:0;background:black;color:lime;padding:2px;font-size:10px;z-index:10001;';
+                 document.body.appendChild(display);
+            } catch(e) {console.warn("Could not add ref debug display", e)}
+            // --- End Optional Display ---
 
-        if (tg?.initData) {
-            console.log("TMA Environment detected.");
-            isTmaEnvironment = true;
-            tg.ready(); // Wait for TMA SDK to be ready
-
-            // Read start_param right after ready
-            referrerIdFromLink = tg.initDataUnsafe?.start_param; // Capture the initial start_param here
-            console.log(`[INIT] Read start_param: ${referrerIdFromLink || 'NONE'}`);
-
-            tg.expand();
-            tg.BackButton.onClick(() => { if (!document.getElementById('home-screen')?.classList.contains('active')) switchScreen('home-screen'); });
-            tg.BackButton.hide(); // Hide initially
+            tg.expand(); tg.BackButton.onClick(() => { if (!document.getElementById('home-screen')?.classList.contains('active')) switchScreen('home-screen'); }); tg.BackButton.hide();
 
             currentUserData = tg.initDataUnsafe?.user;
             if (currentUserData?.id) {
-                currentUserId = String(currentUserData.id); // Ensure it's a string
-                console.log("User ID obtained:", currentUserId);
+                currentUserId = String(currentUserData.id);
+                console.log("User ID found:", currentUserId);
 
-                if (initFirebase()) {
-                     console.log("Firebase initialized. Starting login/registration check...");
-                     // Now handle login/registration first, THEN load data
-                     handleFirebaseLoginUsingTMA(currentUserData)
-                         .then(() => {
-                              console.log("Login/registration check successful. Loading user data...");
-                              return loadUserDataFromFirestore(); // Load data AFTER user exists/is created
-                         })
-                         .then(() => {
-                              console.log("Data loaded successfully. Setting up UI and listeners.");
-                              setupEventListeners();
-                              switchScreen('home-screen'); // Ensure home screen is shown first
-                              // Timer/Mining state is handled within loadUserDataFromFirestore
-                              console.log("App setup complete.");
-                              // Loader hiding is handled within loadUserDataFromFirestore's finally block
-                         })
-                         .catch(err => {
-                              console.error("Error during app setup sequence (login/load):", err);
-                              showErrorMessage("App setup failed. Please restart.", "home");
-                              hideLoader(); // Ensure loader hides on setup error
-                         });
-                } else {
-                     console.error("Firebase initialization failed!");
-                     showErrorMessage("Critical Error: Service connection failed.", "home");
-                     hideLoader(); // Hide loader if Firebase fails to init
+                if (initFirebase()) { // Init Firebase first
+                     console.log("Firebase is ready.");
+                     try {
+                         // Attempt login/registration, then load data
+                         await handleFirebaseLoginUsingTMA(currentUserData);
+                         await loadUserDataFromFirestore(); // Load data *after* login/reg attempt
+                         console.log("Login & Data Load sequence complete.");
+                         setupEventListeners();
+                         switchScreen('home-screen'); // Show home screen
+                         // Timer is started inside loadUserDataFromFirestore
+                         console.log("App setup complete.");
+                     } catch (error) {
+                         console.error("Error during critical setup (login/load):", error);
+                         showErrorMessage("App setup failed. Please restart.", "home");
+                          if (loadingIndicator) loadingIndicator.classList.add('hidden'); // Hide loader on error
+                     }
+                } else { // Firebase init failed
+                    console.error("Firebase initialization failed! Halting setup.");
+                    showErrorMessage("Critical Error: Cannot connect.", "home");
+                    if (loadingIndicator) loadingIndicator.classList.add('hidden');
                 }
-            } else {
-                console.error("Failed to get User ID from Telegram.");
-                showErrorMessage("Cannot verify user. Please restart.", "home");
-                hideLoader(); // Hide loader if no user ID
+            } else { // No User ID
+                console.error("Failed to get User ID.");
+                showErrorMessage("Cannot verify user. Restart.", "home");
+                 if (loadingIndicator) loadingIndicator.classList.add('hidden');
             }
-        } else {
-            console.error("Not in TMA Environment or SDK failed.");
+        } else { // Not in TMA
+            console.error("Not running in TMA Environment.");
             isTmaEnvironment = false;
-            document.body.innerHTML = '<div style="padding: 20px; text-align: center; color: white;"><h1>Access Error</h1><p>Please open this app inside Telegram.</p></div>';
-            // No need to hide loader here as the body content is replaced
+            document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h1>Access Error</h1><p>Please open inside Telegram.</p></div>';
+             if (loadingIndicator) loadingIndicator.classList.add('hidden');
         }
-    }
+    } // End initializeApp
 
     // --- Start the application ---
     initializeApp();
