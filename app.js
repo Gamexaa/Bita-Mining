@@ -464,7 +464,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 await userRef.set(defaultData);
                 console.log("New user document created.");
-                // Use referrerIdFromLink here too for the log message
+              
+                // === Referral count update (FREE version) ===
+    if (referrerIdFromLink) {
+        const referrerRef = db.collection('users').doc(referrerIdFromLink);
+        referrerRef.update({
+            totalReferrals: firebase.firestore.FieldValue.increment(1),
+            referralSpeed: firebase.firestore.FieldValue.increment(0.005)
+        }).then(() => {
+            console.log("Referrer's referral count and speed updated (client-side).");
+        }).catch((err) => {
+            console.error("Failed to update referrer (client-side):", err);
+        });
+    }
+              
+              // Use referrerIdFromLink here too for the log message
                 if (referrerIdFromLink) {
                     console.log(`User ${currentUserId} referred by ${referrerIdFromLink}. Cloud function should trigger.`);
                     // console.warn("REMINDER: Deploy Cloud Function to update referrer's count!"); // We assume it's deployed
