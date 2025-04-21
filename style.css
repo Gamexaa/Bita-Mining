@@ -5,13 +5,18 @@
     padding: 0;
 }
 
+html {
+     height: 100%; /* Ensure HTML takes full height */
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #1c1c1e; /* Dark background from screenshots */
+    background-color: #1c1c1e; /* Dark background */
     color: #ffffff;
-    overscroll-behavior: none;
-    height: 100vh;
-    display: flex; /* Use flexbox for layout */
+    overscroll-behavior: none; /* Prevent pull-to-refresh */
+    height: 100%; /* Ensure body takes full height */
+    margin: 0;
+    display: flex; /* Needed for app-container flex */
 }
 
 .app-container {
@@ -19,14 +24,16 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Prevent body scroll */
+    overflow: hidden; /* Prevent double scrollbars */
 }
 
-/* Main Content Area */
+/* Main Content Area - Takes space between header (if any) and nav */
 .main-content {
-    flex-grow: 1; /* Take available space */
-    overflow-y: auto; /* Allow scrolling WITHIN this area */
-    padding-bottom: 70px; /* Space for bottom nav */
+    flex-grow: 1; /* Takes available vertical space */
+    overflow-y: auto; /* Allows ONLY this area to scroll */
+    overflow-x: hidden;
+    padding-bottom: 20px; /* Add padding at bottom to avoid content hiding behind copy button/nav */
+    position: relative; /* Needed for potential absolute positioning inside */
 }
 
 /* === Loading Indicator Styles === */
@@ -44,443 +51,162 @@ body {
     opacity: 1;
     transition: opacity 0.5s ease-out; /* Fade out effect */
 }
-
 #loading-indicator img {
     width: 100px; /* Adjust logo size */
     height: 100px;
     animation: pulse 1.5s infinite ease-in-out; /* Optional pulsing effect */
 }
-
 @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+    0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); }
 }
-
-/* Style to hide loader smoothly */
 #loading-indicator.hidden {
     opacity: 0;
     pointer-events: none; /* Disable clicks after hiding */
 }
 /* ============================== */
 
-
 /* Screen Styling */
 .screen {
     display: none; /* Hide by default */
     flex-direction: column;
     align-items: center;
-    padding: 0 20px 20px 20px; /* Padding for content */
+    padding: 0 20px 0 20px; /* Remove bottom padding here, added to main-content */
     width: 100%;
-    min-height: 100%; /* Try to fill height */
+    /* min-height: 100%; Remove this, let content define height */
 }
-
 .screen.active {
     display: flex; /* Show active screen */
 }
 
-/* --- Home Screen Styles --- */
-.top-section-home {
-    width: 100%;
-    padding-top: 30px; /* Space from top */
+/* --- Home Screen Specific Styles --- */
+#home-screen .top-gradient-section { /* Target specifically */
+    width: calc(100% + 40px); /* Extend to full width including padding */
+    margin-left: -20px; /* Counteract padding */
+    margin-right: -20px;
+    padding-top: 30px;
     padding-bottom: 20px;
-    background: linear-gradient(to bottom, #f0b90b, #1c1c1e 70%); /* Yellow gradient to dark */
+    background: linear-gradient(to bottom, #f0b90b, #1c1c1e 70%);
     display: flex;
     justify-content: center;
     align-items: center;
-    border-bottom-left-radius: 50% 30px; /* Curved bottom */
-    border-bottom-right-radius: 50% 30px; /* Curved bottom */
+    border-bottom-left-radius: 50% 30px;
+    border-bottom-right-radius: 50% 30px;
     margin-bottom: 25px;
 }
-
 .balance-circle {
-    background-color: #ffffff; /* White circle */
+    background-color: #ffffff;
     border-radius: 50%;
-    width: 200px; /* Adjust size as needed */
-    height: 200px;
+    width: 190px; /* Slightly smaller if needed */
+    height: 190px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    color: #000000; /* Black text inside circle */
+    color: #000000;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
-
-.balance-logo {
-    font-size: 1.8em;
-    font-weight: bold;
-    color: #333;
-}
-
-.balance-value {
-    font-size: 2.2em;
-    font-weight: bold;
-    margin: 5px 0;
-    line-height: 1.1;
-}
-
-.usd-value {
-    font-size: 0.9em;
-    color: #555;
-}
+.balance-logo { font-size: 1.7em; font-weight: bold; color: #333; }
+.balance-value { font-size: 2.1em; font-weight: bold; margin: 4px 0; line-height: 1.1;}
+.usd-value { font-size: 0.85em; color: #555; }
 
 .info-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 15px;
     width: 100%;
-    max-width: 450px; /* Limit width */
+    max-width: 450px;
     margin-bottom: 25px;
 }
-
 .info-box {
-    background-color: #2c2c2e; /* Darker grey boxes */
+    background-color: #2c2c2e;
     padding: 15px 10px;
-    border-radius: 12px; /* More rounded corners */
+    border-radius: 12px;
     text-align: center;
 }
+.info-label { display: block; font-size: 0.8em; color: #a0a0a5; margin-bottom: 8px; }
+.info-label i { margin-right: 5px; color: #f0b90b; }
+.info-value { font-size: 1.2em; font-weight: 600; color: #ffffff; }
 
-.info-label {
-    display: block;
-    font-size: 0.8em;
-    color: #a0a0a5; /* Lighter grey text */
-    margin-bottom: 8px;
-}
-
-.info-label i {
-    margin-right: 5px;
-    color: #f0b90b; /* Yellow icon color */
-}
-
-.info-value {
-    font-size: 1.2em;
-    font-weight: 600;
-    color: #ffffff;
-}
-
-.mining-action {
-    width: 100%;
-    text-align: center;
-    margin-top: 15px;
-}
-
-.mining-instruction {
-    font-size: 0.85em;
-    color: #a0a0a5;
-    margin-bottom: 20px;
-}
-
+.mining-action { width: 100%; text-align: center; margin-top: 15px; padding-bottom: 20px; /* Ensure space at bottom */ }
+.mining-instruction { font-size: 0.85em; color: #a0a0a5; margin-bottom: 20px; }
 .mining-button-style {
-    background-color: #f0b90b; /* Bright yellow/orange */
-    color: #1c1c1e; /* Dark text */
-    border: none;
-    padding: 18px 30px;
-    border-radius: 30px; /* Fully rounded ends */
-    font-size: 1.2em;
-    font-weight: bold;
-    cursor: pointer;
-    width: 85%;
-    max-width: 350px;
-    transition: background-color 0.2s ease, opacity 0.2s ease;
+    background-color: #f0b90b; color: #1c1c1e; border: none; padding: 18px 30px;
+    border-radius: 30px; font-size: 1.2em; font-weight: bold; cursor: pointer;
+    width: 85%; max-width: 350px; transition: background-color 0.2s ease, opacity 0.2s ease;
 }
+.mining-button-style:disabled { background-color: #7d641d; color: #c5b891; cursor: not-allowed; opacity: 0.8; }
 
-.mining-button-style:disabled {
-    background-color: #7d641d; /* Darker yellow when disabled */
-    color: #c5b891;
-    cursor: not-allowed;
-    opacity: 0.8;
-}
+/* --- Friends Screen Specific Styles --- */
+#friends-screen { padding-bottom: 80px; /* Extra padding needed because button is outside flow */ }
+.screen-title { font-size: 1.8em; font-weight: bold; color: #f0b90b; margin-top: 10px; margin-bottom: 10px; text-align: center; line-height: 1.2; }
+.screen-subtitle { font-size: 0.9em; color: #a0a0a5; text-align: center; margin-bottom: 25px; line-height: 1.4; }
+.friends-total-bar { background-color: #2c2c2e; padding: 8px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 450px; margin-bottom: 20px; font-size: 0.9em; color: #a0a0a5; }
+#friends-total-count { color: #ffffff; font-weight: 600; }
+.friend-list { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.friend-item { background-color: #2c2c2e; padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
+.friend-info { display: flex; align-items: center; gap: 12px; }
+.friend-avatar { width: 35px; height: 35px; background-color: #555; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ccc; font-size: 1.1em; overflow: hidden; }
+.friend-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.friend-details { display: flex; flex-direction: column; }
+.friend-name { font-weight: 500; font-size: 0.95em; color: #ffffff; }
+.friend-joined { font-size: 0.75em; color: #a0a0a5; }
+.friend-status { text-align: right; }
+.friend-boost { font-size: 0.85em; color: #34c759; font-weight: 500; display: block; }
+.friend-activity { font-size: 0.75em; font-weight: 500; }
+.friend-activity.active { color: #34c759; }
+.friend-activity.inactive { color: #ff3b30; }
+.no-friends-text { color: #a0a0a5; margin-top: 30px; font-style: italic; text-align: center; }
 
-/* --- Friends Screen Styles --- */
-.screen-title {
-    font-size: 1.8em;
-    font-weight: bold;
-    color: #f0b90b; /* Yellow title */
-    margin-top: 10px;
-    margin-bottom: 10px;
-    text-align: center;
-    line-height: 1.2;
-}
-
-.screen-subtitle {
-    font-size: 0.9em;
-    color: #a0a0a5;
-    text-align: center;
-    margin-bottom: 25px;
-    line-height: 1.4;
-}
-
-.friends-total-bar {
-    background-color: #2c2c2e;
-    padding: 8px 15px;
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    max-width: 450px;
-    margin-bottom: 20px;
-    font-size: 0.9em;
-    color: #a0a0a5;
-}
-
-#friends-total-count {
-    color: #ffffff;
-    font-weight: 600;
-}
-
-.friend-list {
-    width: 100%;
-    max-width: 450px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.friend-item {
-    background-color: #2c2c2e;
-    padding: 12px 15px;
-    border-radius: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.friend-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.friend-avatar {
-    width: 35px;
-    height: 35px;
-    background-color: #555;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #ccc;
-    font-size: 1.1em;
-    overflow: hidden; /* Hide image overflow */
-}
-.friend-avatar img { /* Style for potential future images */
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.friend-details {
-    display: flex;
-    flex-direction: column;
-}
-
-.friend-name {
-    font-weight: 500;
-    font-size: 0.95em;
-    color: #ffffff;
-}
-
-.friend-joined {
-    font-size: 0.75em;
-    color: #a0a0a5;
-}
-
-.friend-status {
-    text-align: right;
-}
-
-.friend-boost {
-    font-size: 0.85em;
-    color: #34c759; /* Green boost color */
-    font-weight: 500;
-    display: block;
-}
-
-.friend-activity {
-    font-size: 0.75em;
-    font-weight: 500;
-}
-
-.friend-activity.active {
-    color: #34c759; /* Green */
-}
-
-.friend-activity.inactive {
-    color: #ff3b30; /* Red */
-}
-
-.no-friends-text {
-    color: #a0a0a5;
-    margin-top: 30px;
-    font-style: italic;
-}
-
+/* Friends Copy Button - Fixed near bottom */
 .friends-copy-button {
-    background-color: #007aff; /* Blue button like screenshot */
-    color: white;
-    border: none;
-    padding: 15px 30px;
-    border-radius: 10px;
-    font-size: 1.1em;
-    font-weight: 600;
-    cursor: pointer;
-    width: 85%;
-    max-width: 350px;
-    margin-top: 10px; /* Add some space if friend list is empty */
+    position: fixed; /* Fix position relative to viewport */
+    bottom: 80px; /* Space above the bottom nav */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Adjust centering */
+    background-color: #007aff; color: white; border: none;
+    padding: 15px 30px; border-radius: 10px; font-size: 1.1em; font-weight: 600;
+    cursor: pointer; width: 85%; max-width: 350px; z-index: 50; /* Below nav, above content */
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.3); /* Add shadow for visibility */
 }
 
 /* --- Boost Screen Styles --- */
-.task-list {
-    width: 100%;
-    max-width: 450px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.task-item {
-    background-color: #2c2c2e;
-    padding: 15px;
-    border-radius: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.task-icon-boost { /* Using Font Awesome now */
-    width: 40px;
-    height: 40px;
-    background-color: #3a3a3c; /* Slightly different bg for icon */
-    border-radius: 8px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.6em; /* Adjust icon size */
-    color: #007aff; /* Icon color (e.g., Telegram blue) */
-    margin-right: 15px;
-}
-
-.task-details-boost {
-    flex-grow: 1; /* Take available space */
-    display: flex;
-    flex-direction: column;
-}
-
-.task-title { /* Reusing general title style */
-    font-weight: 500;
-    font-size: 1em;
-    color: #ffffff;
-}
-
-.task-reward { /* Reusing general reward style */
-    font-size: 0.85em;
-    color: #34c759; /* Green reward text */
-}
-
-.task-action-container {
-    min-width: 85px; /* Ensure space for button/check */
-    text-align: right;
-    display: flex; /* Added for centering image */
-    justify-content: center; /* Added for centering image */
-    align-items: center; /* Added for centering image */
-}
-
-.task-button { /* General style for task buttons */
-    border: none;
-    padding: 10px 20px;
-    border-radius: 20px; /* Rounded button */
-    cursor: pointer;
-    font-size: 0.9em;
-    font-weight: 600;
-    transition: background-color 0.2s ease, opacity 0.2s ease;
-}
-.task-button.boost-start { /* Specific style for 'Start' */
-    background-color: #e5e5ea; /* Light grey */
-    color: #1c1c1e; /* Dark text */
-}
-.task-button.boost-claim { /* Specific style for 'Claim' */
-     background-color: #007aff; /* Blue */
-     color: #ffffff;
-}
-.task-button.boost-claiming { /* Style for 'Claiming...' state */
-    background-color: #555;
-    color: #aaa;
-    cursor: not-allowed;
-}
-.task-button:disabled { /* General disabled state */
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* Style for the custom tick image */
-.task-complete-image {
-    width: 28px; /* Adjust size as needed */
-    height: 28px;
-}
-
+#boost-screen { padding-bottom: 20px; } /* Standard padding */
+.task-list { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+.task-item { background-color: #2c2c2e; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
+.task-icon-boost { width: 40px; height: 40px; background-color: #3a3a3c; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 1.6em; color: #007aff; margin-right: 15px; }
+.task-details-boost { flex-grow: 1; display: flex; flex-direction: column; }
+.task-title { font-weight: 500; font-size: 1em; color: #ffffff; }
+.task-reward { font-size: 0.85em; color: #34c759; }
+.task-action-container { min-width: 85px; text-align: right; }
+.task-button { border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-size: 0.9em; font-weight: 600; transition: background-color 0.2s ease, opacity 0.2s ease; }
+.task-button.boost-start { background-color: #e5e5ea; color: #1c1c1e; }
+.task-button.boost-claim { background-color: #007aff; color: #ffffff; }
+.task-button.boost-claiming { background-color: #555; color: #aaa; cursor: not-allowed; }
+.task-button:disabled { opacity: 0.6; cursor: not-allowed; }
+.task-complete-check { font-size: 1.8em; color: #34c759; font-weight: bold; }
 
 /* --- Bottom Navigation --- */
 .bottom-nav {
-    position: fixed; /* Stick to bottom */
-    bottom: 0;
-    left: 0;
+    /* Removed position: fixed */
+    flex-shrink: 0; /* Prevent nav from shrinking */
     width: 100%;
-    height: 65px; /* Slightly taller */
-    background-color: #1c1c1e; /* Match body background */
-    border-top: 1px solid #3a3a3c; /* Subtle top border */
+    height: 65px;
+    background-color: #1c1c1e;
+    border-top: 1px solid #3a3a3c;
     display: flex;
     justify-content: space-around;
-    align-items: stretch; /* Stretch items vertically */
-    z-index: 100; /* Keep on top */
+    align-items: stretch;
+    z-index: 100;
 }
-
-.nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center; /* Center content vertically */
-    cursor: pointer;
-    color: #8e8e93; /* Default grey icon/text */
-    flex-grow: 1;
-    /* padding-top: 5px; Remove fixed padding-top */
-    transition: color 0.2s ease;
-    text-decoration: none; /* Remove underline from potential links */
-}
-
-.nav-item i {
-    font-size: 1.6em; /* Larger icons */
-    margin-bottom: 4px; /* Space between icon and text */
-    line-height: 1; /* Prevent extra space */
-}
-
-.nav-item span {
-    font-size: 0.7em; /* Smaller text */
-    font-weight: 500;
-    line-height: 1;
-}
-
-.nav-item.active {
-    color: #f0b90b; /* Yellow highlight for active item */
-}
-
-.nav-item:hover:not(.active) {
-    color: #cccccc; /* Lighter grey on hover */
-}
+.nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: #8e8e93; flex-grow: 1; transition: color 0.2s ease; text-decoration: none; }
+.nav-item i { font-size: 1.6em; margin-bottom: 4px; line-height: 1; }
+.nav-item span { font-size: 0.7em; font-weight: 500; line-height: 1; }
+.nav-item.active { color: #f0b90b; }
+.nav-item:hover:not(.active) { color: #cccccc; }
 
 /* Error Message Style */
 .error-message {
-    color: #ff453a; /* Brighter Red */
-    background-color: rgba(255, 69, 58, 0.1);
-    border: 1px solid rgba(255, 69, 58, 0.5);
-    padding: 10px 15px;
-    border-radius: 8px;
-    margin-top: 20px;
-    width: 90%;
-    max-width: 450px;
-    text-align: center;
-    font-size: 0.9em;
-    z-index: 10; /* Ensure visible */
+    color: #ff453a; background-color: rgba(255, 69, 58, 0.1); border: 1px solid rgba(255, 69, 58, 0.5);
+    padding: 10px 15px; border-radius: 8px; margin-top: 20px; width: 90%; max-width: 450px;
+    text-align: center; font-size: 0.9em; z-index: 10;
 }

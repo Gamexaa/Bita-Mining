@@ -6,7 +6,7 @@
     <title>Bita Mining</title>
     <link rel="stylesheet" href="style.css">
     <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Firebase SDKs (v8 Syntax) -->
@@ -18,31 +18,25 @@
 <body>
     <!-- Loading Indicator -->
     <div id="loading-indicator">
-        <img src="bita_logo.png" alt="Loading...">
-    </div>
-    <!-- === YEH LINE ADD KARO === -->
-    <p id="debug-referrer-display" class="debug-info" style="display: none; position: fixed; top: 5px; left: 5px; background: black; color: lime; padding: 3px; font-size: 10px; z-index: 10001;"></p>
-    <!-- ======================== -->
-
-    <div class="app-container">
-        <!-- Baaki ka app content -->
-        ...
         <img src="bita_logo.png" alt="Loading Bita Mining...">
     </div>
-    
 
-    <!-- Main App Structure -->
+    <!-- Main App Container -->
     <div class="app-container">
+        <!-- Content that scrolls -->
         <main class="main-content">
+
             <!-- Home Screen -->
             <div id="home-screen" class="screen active">
-                <div class="top-section-home">
+                <!-- Top Gradient Section -->
+                <div class="top-gradient-section">
                     <div class="balance-circle">
                         <div class="balance-logo">$ß</div>
                         <div id="balance" class="balance-value">0000.0000</div>
                         <div id="usd-equivalent" class="usd-value">( $000.00 )</div>
                     </div>
                 </div>
+                <!-- Info Grid -->
                 <div class="info-grid">
                     <div class="info-box">
                         <div class="info-label"><i class="fa-solid fa-users"></i> Active referral</div>
@@ -61,13 +55,13 @@
                         <div id="mining-speed" class="info-value">0.015/h</div>
                     </div>
                 </div>
+                <!-- Mining Action -->
                 <div class="mining-action">
                     <p class="mining-instruction">Start mining every 24 hours for max ß potential !</p>
                     <button id="mining-button" class="mining-button-style">Start Mining</button>
                 </div>
-                <!-- Debug Display Area (Hidden by default, can be enabled in JS for testing) -->
-                <div id="debug-area" style="position: fixed; bottom: 70px; left: 5px; background: rgba(0,0,0,0.6); color: white; font-size: 9px; padding: 3px; z-index: 10001; display: none;"></div>
-                <div id="error-message-area-home" class="error-message" style="display: none;"></div>
+                 <!-- Error Message Area -->
+                 <div id="error-message-area-home" class="error-message" style="display: none;"></div>
             </div>
 
             <!-- Friends Screen -->
@@ -82,8 +76,9 @@
                     <!-- Friend items loaded by JS -->
                 </div>
                 <p id="no-friends-message" class="no-friends-text" style="display: block;">Loading friends...</p>
-                <button id="copy-link-button" class="friends-copy-button">Copy link</button>
-                <div id="error-message-area-friends" class="error-message" style="display: none;"></div>
+                 <!-- Error Message Area -->
+                 <div id="error-message-area-friends" class="error-message" style="display: none;"></div>
+                 <!-- Copy button is placed outside the main scrollable content in the CSS using position fixed/absolute -->
             </div>
 
             <!-- Boost Screen -->
@@ -96,18 +91,20 @@
                              <span class="task-title">Join our channel</span>
                              <span class="task-reward">0.005/h</span>
                          </div>
-                         <!-- Container for button/tick image -->
                          <div id="boost-task-1-action" class="task-action-container">
-                             <!-- Button/Image added by JS -->
+                             <!-- Button/Checkmark added by JS -->
                          </div>
                      </div>
-                     <!-- Add more tasks here if needed -->
                  </div>
                   <div id="error-message-area-boost" class="error-message" style="display: none;"></div>
             </div>
-        </main>
 
-        <!-- Bottom Navigation -->
+        </main> <!-- End main-content -->
+
+        <!-- Fixed Copy Button for Friends Screen (Positioned with CSS) -->
+        <button id="copy-link-button" class="friends-copy-button" style="display: none;">Copy link</button>
+
+        <!-- Fixed Bottom Navigation -->
         <nav class="bottom-nav">
             <div class="nav-item" data-target="friends-screen">
                 <i class="fa-solid fa-users"></i>
@@ -122,9 +119,9 @@
                 <span>Boost</span>
             </div>
         </nav>
-    </div>
+    </div> <!-- End app-container -->
 
     <!-- App Logic - Load Last -->
-    <script src="app.js" defer></script> <!-- Added defer -->
+    <script src="app.js"></script>
 </body>
 </html>
