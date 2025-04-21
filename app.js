@@ -387,8 +387,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateBoostTaskUI(); updateDisplay(); startTimer();
                 console.log("[LOAD_DATA] Initial UI updated.");
             } else {
-                console.error(`[LOAD_DATA] User document ${currentUserId} NOT FOUND!`);
-                showErrorMessage("User data error. Contact support.", "home");
+                // User document doesn't exist - this case is now handled by handleFirebaseLoginUsingTMA
+                // We shouldn't reach here if handleFirebaseLoginUsingTMA ran correctly.
+                // If we DO reach here, it means the user was created but fetching failed immediately after.
+                console.warn(`[LOAD_DATA] User document ${currentUserId} not found during data load, despite potentially being created.`);
+                showErrorMessage("Error loading initial data. Try restarting.", "home");
             }
         } catch (error) {
             console.error("[LOAD_DATA] CATCH ERROR loading user data:", error);
@@ -420,15 +423,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     isPremium: tmaUserData.is_premium ?? false,
                     languageCode: tmaUserData.language_code || 'en',
                 };
+                // Avoid overwriting referredBy if it already exists (though it shouldn't change)
+                if (doc.data().referredBy !== undefined) {
+                    console.log("Keeping existing referredBy value.");
+                }
                 await userRef.update(updatePayload);
                 console.log("Existing user updated.");
             } else {
                 console.log("New user detected.");
-                // Re-check start_param *just before* creating user data for robustness
-                const currentStartParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
-                console.log("[DEBUG] Re-checking start_param before creating user:", currentStartParam);
-                const referredByUserId = currentStartParam ? String(currentStartParam) : null; // Use re-checked value
-                console.log("[DEBUG] Final referredBy value for new user:", referredByUserId);
+                // --- MODIFICATION START ---
+                // REMOVED: Re-checking start_param logic.
+                // const currentStartParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+                // console.log("[DEBUG] Re-checking start_param before creating user:", currentStartParam);
+                // const referredByUserId = currentStartParam ? String(currentStartParam) : null; // Use re-checked value
+                // console.log("[DEBUG] Final referredBy value for new user:", referredByUserId);
 
                 const defaultData = {
                     telegramId: currentUserId,
@@ -439,17 +447,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     languageCode: tmaUserData.language_code || 'en',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-                    balance: 0.0000, miningEndTime: null, baseMiningSpeed: 0.015,
-                    boostSpeed: 0, referralSpeed: 0, totalReferrals: 0,
-                    activeReferrals: 0, boostTask1Completed: false,
-                    referredBy: referredByUserId // Save the possibly re-checked ID
+                    balance: 0.0000,
+                    miningEndTime: null,
+                    baseMiningSpeed: 0.015,
+                    boostSpeed: 0,
+                    referralSpeed: 0,
+                    totalReferrals: 0,
+                    activeReferrals: 0,
+                    boostTask1Completed: false,
+                    // Use the referrerIdFromLink captured during initializeApp
+                    referredBy: referrerIdFromLink ? String(referrerIdFromLink) : null
                 };
+
+                // Log the data right before sending to Firestore
+                console.log("[DEBUG] Data being set for new user:", JSON.stringify(defaultData));
+
                 await userRef.set(defaultData);
                 console.log("New user document created.");
-                if (referredByUserId) {
-                    console.log(`User ${currentUserId} referred by ${referredByUserId}.`);
-                    console.warn("REMINDER: Deploy Cloud Function to update referrer's count!");
+                // Use referrerIdFromLink here too for the log message
+                if (referrerIdFromLink) {
+                    console.log(`User ${currentUserId} referred by ${referrerIdFromLink}. Cloud function should trigger.`);
+                    // console.warn("REMINDER: Deploy Cloud Function to update referrer's count!"); // We assume it's deployed
                 }
+                // --- MODIFICATION END ---
             }
             // Indicate success (important for initializeApp's .then())
             return Promise.resolve();
@@ -484,18 +504,33 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleMiningClick() { if (!isMining) startMining(); else tg?.showPopup({ message: 'Mining session already active!' }); }
     function handleCopyLinkClick() {
         if (!currentUserId || !isTmaEnvironment) { showErrorMessage("Cannot create link.", "friends"); return; }
-        const miniAppShortName = 'Play'; // <<< CONFIRM
-        const botUsername = "BitaMiningbot"; // <<< CONFIRM
+        const miniAppShortName = 'Play'; // <<< CONFIRM THIS IS YOUR MINI APP SHORT NAME/URL PATH
+        const botUsername = "BitaMiningbot"; // <<< CONFIRM YOUR BOT USERNAME
         const linkToCopy = `https://t.me/${botUsername}/${miniAppShortName}?start=${currentUserId}`;
         console.log("Copying link:", linkToCopy);
         if (tg?.clipboardWriteText) {
-            tg.clipboardWriteText(linkToCopy, (ok) => ok ? tg.showPopup({ message: 'Referral link copied!' }) : copyFallback(linkToCopy));
-        } else { copyFallback(linkToCopy); }
+            tg.clipboardWriteText(linkToCopy, (ok) => {
+                 if (ok) {
+                     tg.showPopup({ message: 'Referral link copied!' });
+                 } else {
+                     console.warn("TMA clipboard write failed. Using fallback.");
+                     copyFallback(linkToCopy);
+                 }
+            });
+        } else {
+            console.warn("TMA clipboard API not available. Using fallback.");
+            copyFallback(linkToCopy);
+        }
     }
     function copyFallback(text) {
         navigator.clipboard.writeText(text).then(() => {
-            tg?.showPopup({ message: 'Link copied!' }); alert('Referral link copied!');
-        }).catch(err => showErrorMessage('Could not copy link.', 'friends'));
+            // Avoid double alert if TMA popup exists
+            if (!tg?.showPopup) alert('Referral link copied!');
+            else tg?.showPopup({ message: 'Link copied!' }); // Show TMA popup if available
+        }).catch(err => {
+            console.error("Fallback clipboard copy failed:", err);
+            showErrorMessage('Could not copy link.', 'friends');
+        });
     }
 
     // --- Application Initialization ---
@@ -514,38 +549,39 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tg?.initData) {
             console.log("TMA Environment detected.");
             isTmaEnvironment = true;
-            tg.ready();
+            tg.ready(); // Wait for TMA SDK to be ready
 
             // Read start_param right after ready
-            referrerIdFromLink = tg.initDataUnsafe?.start_param;
+            referrerIdFromLink = tg.initDataUnsafe?.start_param; // Capture the initial start_param here
             console.log(`[INIT] Read start_param: ${referrerIdFromLink || 'NONE'}`);
 
             tg.expand();
             tg.BackButton.onClick(() => { if (!document.getElementById('home-screen')?.classList.contains('active')) switchScreen('home-screen'); });
-            tg.BackButton.hide();
+            tg.BackButton.hide(); // Hide initially
 
             currentUserData = tg.initDataUnsafe?.user;
             if (currentUserData?.id) {
-                currentUserId = String(currentUserData.id);
+                currentUserId = String(currentUserData.id); // Ensure it's a string
                 console.log("User ID obtained:", currentUserId);
 
                 if (initFirebase()) {
-                     console.log("Firebase initialized. Starting login/data load...");
+                     console.log("Firebase initialized. Starting login/registration check...");
+                     // Now handle login/registration first, THEN load data
                      handleFirebaseLoginUsingTMA(currentUserData)
                          .then(() => {
-                              console.log("Login/registration successful. Loading user data...");
-                              return loadUserDataFromFirestore(); // Load data after successful login/creation
+                              console.log("Login/registration check successful. Loading user data...");
+                              return loadUserDataFromFirestore(); // Load data AFTER user exists/is created
                          })
                          .then(() => {
-                              console.log("Data loaded. Setting up UI and listeners.");
+                              console.log("Data loaded successfully. Setting up UI and listeners.");
                               setupEventListeners();
-                              switchScreen('home-screen'); // Show home screen first
-                              // Timer is started within loadUserDataFromFirestore
+                              switchScreen('home-screen'); // Ensure home screen is shown first
+                              // Timer/Mining state is handled within loadUserDataFromFirestore
                               console.log("App setup complete.");
-                              // Loader is hidden inside loadUserDataFromFirestore's finally block
+                              // Loader hiding is handled within loadUserDataFromFirestore's finally block
                          })
                          .catch(err => {
-                              console.error("Error during app setup sequence:", err);
+                              console.error("Error during app setup sequence (login/load):", err);
                               showErrorMessage("App setup failed. Please restart.", "home");
                               hideLoader(); // Ensure loader hides on setup error
                          });
@@ -562,8 +598,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             console.error("Not in TMA Environment or SDK failed.");
             isTmaEnvironment = false;
-            document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h1>Access Error</h1><p>Please open this app inside Telegram.</p></div>';
-            hideLoader(); // Hide loader if not TMA
+            document.body.innerHTML = '<div style="padding: 20px; text-align: center; color: white;"><h1>Access Error</h1><p>Please open this app inside Telegram.</p></div>';
+            // No need to hide loader here as the body content is replaced
         }
     }
 
